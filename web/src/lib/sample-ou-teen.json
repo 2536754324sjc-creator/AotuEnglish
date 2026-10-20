@@ -1,0 +1,79 @@
+{
+  "courseName": "校园英语进阶",
+  "description": "面向 13-16 岁，围绕学校生活与阅读理解的进阶课程",
+  "level": "teen",
+  "reviewStatus": "pass",
+  "units": [
+    {
+      "unitId": "teen-school-01",
+      "level": "teen",
+      "topic": "School Life",
+      "titleZh": "校园生活",
+      "wordCount": 6,
+      "estMinutes": 12,
+      "reviewStatus": "pass",
+      "questionCount": 6,
+      "questions": [
+        {
+          "id": "teen-school-01-q1",
+          "type": "read_choose",
+          "promptZh": "读一读，选出正确的意思",
+          "audioText": "textbook",
+          "options": [
+            { "id": "a", "text": "教科书", "correct": true },
+            { "id": "b", "text": "笔记本", "correct": false },
+            { "id": "c", "text": "图书馆", "correct": false }
+          ]
+        },
+        {
+          "id": "teen-school-01-q2",
+          "type": "read_choose",
+          "promptZh": "选出正确的意思",
+          "audioText": "homework",
+          "options": [
+            { "id": "a", "text": "家庭作业", "correct": true },
+            { "id": "b", "text": "宿舍", "correct": false }
+          ]
+        },
+        {
+          "id": "teen-school-01-q3",
+          "type": "tap_to_read",
+          "promptZh": "点一下听发音",
+          "audioText": "laboratory",
+          "options": [{ "id": "a", "text": "Laboratory", "correct": true }]
+        },
+        {
+          "id": "teen-school-01-q4",
+          "type": "read_choose",
+          "promptZh": "选出正确的意思",
+          "audioText": "examination",
+          "options": [
+            { "id": "a", "text": "运动会", "correct": false },
+            { "id": "b", "text": "考试", "correct": true }
+          ]
+        },
+        {
+          "id": "teen-school-01-q5",
+          "type": "cloze",
+          "promptZh": "选出合适的词",
+          "audioText": "schedule",
+          "options": [
+            { "id": "a", "text": "schedule", "correct": true },
+            { "id": "b", "text": "shelf", "correct": false },
+            { "id": "c", "text": "shadow", "correct": false }
+          ]
+        },
+        {
+          "id": "teen-school-01-q6",
+          "type": "read_choose",
+          "promptZh": "选出正确的意思",
+          "audioText": "canteen",
+          "options": [
+            { "id": "a", "text": "食堂", "correct": true },
+            { "id": "b", "text": "教室", "correct": false }
+          ]
+        }
+      ]
+    }
+  ]
+}

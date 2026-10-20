@@ -1,0 +1,92 @@
+---
+export const prerender = true;
+
+import Layout from "../layouts/Layout.astro";
+import Breadcrumbs from "../ui/breadcrumbs.astro";
+import IconLibraryDirectory from "../ui/icon-library-directory";
+import RelatedDirectoryLinks from "../ui/related-directory-links.astro";
+import { iconLibraries } from "../data/icon-libraries";
+
+const breadcrumbItems = [
+  { label: "Explore", href: "/" },
+  { label: "Icon libraries" },
+];
+const siteOrigin = Astro.site ?? new URL("https://www.ui-skills.com");
+const pageUrl = new URL("/icons", siteOrigin).toString();
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "React Icon Libraries",
+    description:
+      "Compare free and open-source React icon libraries, including Lucide, Heroicons, Phosphor, and Tabler Icons.",
+    url: pageUrl,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: iconLibraries.length,
+      itemListElement: iconLibraries.map((library, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: library.name,
+        url: library.websiteUrl,
+      })),
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.label,
+      item: new URL(item.href ?? "/icons", siteOrigin).toString(),
+    })),
+  },
+];
+---
+
+<Layout
+  structuredData={structuredData}
+  title="React Icon Libraries | UI Skills"
+  description="Compare the best free and open-source React icon libraries, including Lucide, Heroicons, Phosphor, and Tabler Icons."
+>
+  <div class="relative flex min-h-dvh flex-col items-center justify-start">
+    <div class="container-3xl relative mt-20">
+      <div class="mx-auto flex w-full flex-col gap-10">
+        <Breadcrumbs items={breadcrumbItems} />
+
+        <div class="flex flex-col gap-3">
+          <h1 class="type-h1 text-content-primary">React icon libraries</h1>
+          <p class="type-body-md text-content-secondary">
+            Find open-source React icon libraries for web apps and product
+            interfaces, including Lucide, Heroicons, Phosphor, Tabler Icons, and
+            more.
+          </p>
+        </div>
+
+        <section aria-labelledby="library-list-title">
+          <h2 id="library-list-title" class="sr-only">Icon libraries</h2>
+          <div>
+            <IconLibraryDirectory libraries={iconLibraries} client:idle />
+          </div>
+        </section>
+        <RelatedDirectoryLinks
+          links={[
+            {
+              label: "Component libraries",
+              href: "/components",
+              description:
+                "Compare React libraries, primitives, shadcn components, and UI systems.",
+            },
+            {
+              label: "Design.md files",
+              href: "/design-md",
+              description:
+                "Browse DESIGN.md files from real-world companies and open-source projects.",
+            },
+          ]}
+        />
+      </div>
+    </div>
+  </div>
+</Layout>

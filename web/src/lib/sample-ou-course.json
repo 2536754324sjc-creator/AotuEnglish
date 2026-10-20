@@ -1,0 +1,73 @@
+{
+  "courseName": "农场英语启蒙",
+  "description": "面向 4-7 岁，围绕农场动物展开的入门课程",
+  "level": "kids-a",
+  "reviewStatus": "pass",
+  "units": [
+    {
+      "unitId": "kids-a-farm-01",
+      "level": "kids-a",
+      "topic": "Farm Animals",
+      "titleZh": "农场动物",
+      "wordCount": 6,
+      "estMinutes": 5,
+      "reviewStatus": "pass",
+      "questionCount": 6,
+      "questions": [
+        {
+          "id": "kids-a-farm-01-q1",
+          "type": "listen_choose_image",
+          "promptZh": "听一听，选出正确的图",
+          "audioText": "cow",
+          "options": [
+            { "id": "a", "imagePrompt": "a cartoon cow, flat vector illustration, soft sky blue background", "correct": true },
+            { "id": "b", "imagePrompt": "a cartoon car, flat vector illustration, soft sky blue background", "correct": false },
+            { "id": "c", "imagePrompt": "a cartoon table, flat vector illustration, soft sky blue background", "correct": false }
+          ]
+        },
+        {
+          "id": "kids-a-farm-01-q2",
+          "type": "tap_to_read",
+          "promptZh": "点一下听发音",
+          "audioText": "duck",
+          "options": [{ "id": "a", "text": "Duck", "correct": true }]
+        },
+        {
+          "id": "kids-a-farm-01-q3",
+          "type": "listen_choose_image",
+          "promptZh": "听一听，选出正确的图",
+          "audioText": "pig",
+          "options": [
+            { "id": "a", "imagePrompt": "a cartoon apple, flat vector illustration, soft sky blue background", "correct": false },
+            { "id": "b", "imagePrompt": "a cartoon pig, flat vector illustration, soft sky blue background", "correct": true }
+          ]
+        },
+        {
+          "id": "kids-a-farm-01-q4",
+          "type": "tap_to_read",
+          "promptZh": "点一下听发音",
+          "audioText": "horse",
+          "options": [{ "id": "a", "text": "Horse", "correct": true }]
+        },
+        {
+          "id": "kids-a-farm-01-q5",
+          "type": "listen_choose_image",
+          "promptZh": "再听一次，选出正确的图",
+          "audioText": "sheep",
+          "options": [
+            { "id": "a", "imagePrompt": "a cartoon sheep, flat vector illustration, soft sky blue background", "correct": true },
+            { "id": "b", "imagePrompt": "a cartoon pencil, flat vector illustration, soft sky blue background", "correct": false },
+            { "id": "c", "imagePrompt": "a cartoon chair, flat vector illustration, soft sky blue background", "correct": false }
+          ]
+        },
+        {
+          "id": "kids-a-farm-01-q6",
+          "type": "tap_to_read",
+          "promptZh": "最后再听一遍",
+          "audioText": "hen",
+          "options": [{ "id": "a", "text": "Hen", "correct": true }]
+        }
+      ]
+    }
+  ]
+}

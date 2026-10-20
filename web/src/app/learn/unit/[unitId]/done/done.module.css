@@ -1,0 +1,146 @@
+.app {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 100%);
+}
+
+.card {
+  width: min(520px, 100%);
+  padding: 44px 36px 36px;
+  border-radius: var(--r-lg);
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 18px 0 rgba(18, 35, 63, 0.06), 0 30px 60px rgba(18, 35, 63, 0.12);
+  animation: rise 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+.title {
+  margin: 8px 0 0;
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 28px 0 8px;
+}
+
+.star {
+  width: 64px;
+  height: 64px;
+  color: #dde7f3;
+  opacity: 0;
+  transform: scale(0.4) rotate(-20deg);
+  animation: drop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) forwards;
+}
+
+.star.on {
+  color: var(--sun);
+  filter: drop-shadow(0 5px 0 rgba(231, 161, 0, 0.25));
+}
+
+@keyframes drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-28px) scale(0.4) rotate(-20deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.08) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.note {
+  margin: 14px 0 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.actions {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.primary {
+  min-height: 64px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--blue-strong);
+  color: #fff;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 7px 0 var(--blue-deep);
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.16s ease;
+}
+
+.primary:hover {
+  background: #1a5cc7;
+}
+
+.primary:active {
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 var(--blue-deep);
+}
+
+.ghost {
+  min-height: 52px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ghost:hover {
+  background: #f4f8fd;
+}
+
+@media (max-width: 720px) {
+  .card {
+    padding: 34px 22px 26px;
+  }
+  .star {
+    width: 52px;
+    height: 52px;
+  }
+  .primary {
+    min-height: 58px;
+    font-size: 18px;
+  }
+}

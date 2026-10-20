@@ -1,0 +1,861 @@
+app:
+  description: OU · AotuEnglish 课程内容生产。课程规划 → 单元循环（题目生成+审核修复）→ 汇总，直接输出前端可渲染的单元 JSON（listen_choose_image / tap_to_read / read_choose / cloze），四档内容分层（kids-a / kids-b / teen / adult）
+  icon: 🎯
+  icon_background: '#E0F2FE'
+  icon_type: emoji
+  mode: workflow
+  name: OU
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/zhipuai:0.0.35@e9b5bafe2e232354575033b0fd0b782eb7abe845b8a48e5a2503f717ef2432da
+    version: null
+kind: app
+version: 0.7.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: code_aggregate-source-end_node-target
+      source: code_aggregate
+      sourceHandle: source
+      target: end_node
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: iteration
+        targetType: code
+      id: iter_units-source-code_aggregate-target
+      source: iter_units
+      sourceHandle: source
+      target: code_aggregate
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        sourceType: iteration-start
+        targetType: llm
+      id: iter_unitsstart-source-llm_content-target
+      source: iter_unitsstart
+      sourceHandle: source
+      target: llm_content
+      targetHandle: target
+      type: custom
+      zIndex: 1001
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        sourceType: llm
+        targetType: code
+      id: llm_content-source-parse_content-target
+      source: llm_content
+      sourceHandle: source
+      target: parse_content
+      targetHandle: target
+      type: custom
+      zIndex: 1001
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: llm_planner-source-parse_plan-target
+      source: llm_planner
+      sourceHandle: source
+      target: parse_plan
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        sourceType: llm
+        targetType: code
+      id: llm_review_fix-source-parse_final-target
+      source: llm_review_fix
+      sourceHandle: source
+      target: parse_final
+      targetHandle: target
+      type: custom
+      zIndex: 1001
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        sourceType: code
+        targetType: llm
+      id: parse_content-source-llm_review_fix-target
+      source: parse_content
+      sourceHandle: source
+      target: llm_review_fix
+      targetHandle: target
+      type: custom
+      zIndex: 1001
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: iteration
+      id: parse_plan-source-iter_units-target
+      source: parse_plan
+      sourceHandle: source
+      target: iter_units
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: start_node-source-llm_planner-target
+      source: start_node
+      sourceHandle: source
+      target: llm_planner
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        code: "import json\n\n\ndef main(units_result: list, course_name: str, description: str, level: str) -> dict:\n    ok, failed = [], []\n    for u in units_result or []:\n        if isinstance(u, dict) and isinstance(u.get(\"content\"), dict):\n            ok.append(u)\n        else:\n            failed.append(str(u)[:60])\n\n    passed = sum(1 for u in ok if u.get(\"reviewStatus\") == \"pass\")\n    repaired = len(ok) - passed\n    if ok and not failed and repaired == 0:\n        review_status = \"pass\"\n    elif ok:\n        review_status = \"partial\"\n    else:\n        review_status = \"fail\"\n\n    units = []\n    for u in ok:\n        c = u.get(\"content\") or {}\n        qs = c.get(\"questions\") or []\n        units.append({\n            \"unitId\": c.get(\"unitId\") or u.get(\"unitId\", \"\"),\n            \"level\": c.get(\"level\") or level,\n            \"topic\": c.get(\"topic\", \"\"),\n            \"titleZh\": c.get(\"titleZh\") or u.get(\"titleZh\", \"\"),\n            \"wordCount\": c.get(\"wordCount\", 0),\n            \"estMinutes\": c.get(\"estMinutes\", 5),\n            \"reviewStatus\": u.get(\"reviewStatus\", \"\"),\n            \"questionCount\": len(qs),\n            \"questions\": qs,\n        })\n\n    course = {\n        \"courseName\": course_name,\n        \"description\": description,\n        \"level\": level,\n        \"reviewStatus\": review_status,\n        \"units\": units,\n    }\n\n    total_q = sum(u[\"questionCount\"] for u in units)\n    by_type = {}\n    for u in units:\n        for q in u[\"questions\"]:\n            t = q.get(\"type\", \"unknown\")\n            by_type[t] = by_type.get(t, 0) + 1\n    stats = \"单元 %d（一次通过 %d，修复后 %d），失败 %d；题目共 %d；题型分布 %s\" % (\n        len(units), passed, repaired, len(failed), total_q,\n        \", \".join(\"%s=%d\" % (k, v) for k, v in sorted(by_type.items())),\n    )\n\n    # 前端直用：一个 JSON，含全部单元\n    lesson_json = json.dumps(course, ensure_ascii=False)\n\n    # 逐单元拆分，方便单独入库\n    units_json = json.dumps({\"units\": units}, ensure_ascii=False)\n\n    # 质量提示：列出需要人工看一眼的地方\n    warnings = []\n    for u in units:\n        if u[\"reviewStatus\"] != \"pass\":\n            warnings.append(\"单元 %s 经过修复，建议抽查\" % u[\"unitId\"])\n        if u[\"questionCount\"] < 6:\n            warnings.append(\"单元 %s 题目偏少（%d 题）\" % (u[\"unitId\"], u[\"questionCount\"]))\n    if failed:\n        warnings.append(\"失败单元 %d 个：%s\" % (len(failed), \"; \".join(failed)))\n\n    return {\n        \"course\": json.dumps(course, ensure_ascii=False),\n        \"lesson_json\": lesson_json,\n        \"units_json\": units_json,\n        \"stats\": stats,\n        \"warnings\": \"；\".join(warnings) if warnings else \"无\",\n    }\n"
+        code_language: python3
+        desc: 汇总全部单元：完整课程 JSON + Excel TSV + 统计
+        outputs:
+          course:
+            children: null
+            type: string
+          lesson_json:
+            children: null
+            type: string
+          units_json:
+            children: null
+            type: string
+          stats:
+            children: null
+            type: string
+          warnings:
+            children: null
+            type: string
+        selected: false
+        title: 汇总+Excel导出
+        type: code
+        variables:
+        - value_selector:
+          - iter_units
+          - output
+          variable: units_result
+        - value_selector:
+          - parse_plan
+          - course_name
+          variable: course_name
+        - value_selector:
+          - parse_plan
+          - description
+          variable: description
+        - value_selector:
+          - start_node
+          - level
+          variable: level
+      height: 96
+      id: code_aggregate
+      position:
+        x: 2420
+        y: 282
+      positionAbsolute:
+        x: 2420
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - code_aggregate
+          - lesson_json
+          value_type: string
+          variable: lesson_json
+        - value_selector:
+          - code_aggregate
+          - units_json
+          value_type: string
+          variable: units_json
+        - value_selector:
+          - code_aggregate
+          - stats
+          value_type: string
+          variable: stats
+        - value_selector:
+          - code_aggregate
+          - warnings
+          value_type: string
+          variable: warnings
+        selected: false
+        title: 结束
+        type: end
+      height: 244
+      id: end_node
+      position:
+        x: 2720
+        y: 282
+      positionAbsolute:
+        x: 2720
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        desc: 遍历每个单元：题目生成 → 审核+修复 → 解析
+        error_handle_mode: continue-on-error
+        flatten_output: false
+        height: 700
+        is_parallel: false
+        iterator_input_type: array[object]
+        iterator_selector:
+        - parse_plan
+        - units
+        output_selector:
+        - parse_final
+        - unit
+        output_type: array[object]
+        parallel_nums: 10
+        selected: false
+        start_node_id: iter_unitsstart
+        title: 单元循环（题目生成+审核修复）
+        type: iteration
+        width: 1350
+      height: 700
+      id: iter_units
+      position:
+        x: 950
+        y: 100
+      positionAbsolute:
+        x: 950
+        y: 100
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 1350
+      zIndex: 0
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: iter_unitsstart
+      parentId: iter_units
+      position:
+        x: 24
+        y: 320
+      positionAbsolute:
+        x: 974
+        y: 420
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1001
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        memory:
+          enabled: false
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            max_tokens: 8192
+            temperature: 0.3
+            thinking: false
+            top_p: 0.9
+          mode: chat
+          name: glm-4.5-flash
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - role: system
+          text: "你是 AotuEnglish 的题目审核修复官。先审核单元题目 JSON，发现问题就直接修好再输出。\n\n【审核项】\n1. 结构完整：必须有 unitId / level / topic / titleZh / wordCount / estMinutes / questions 七个字段。\n2. 题量达标：按内容档核对题数（kids-a 6-8、kids-b 8-10、teen 10-12、adult 12-15）。\n3. 每题唯一正确：options 里必须恰好一个 correct=true。\n4. 词表覆盖：规划里的每个 word 至少出现在一道题的 audioText 里。\n5. audioText 合法：必须是规划词表里的词，不能是干扰词或自造词。\n6. id 连续：{unitId}-q1、q2、q3… 从 1 开始不跳号。\n7. imagePrompt 统一：必须带前缀「flat vector illustration, soft sky blue background」。\n8. 题型合法：只能是 listen_choose_image / tap_to_read / read_choose / cloze。\n\n【输出格式】\n只输出一个 JSON 对象：\n{\n  \"status\": \"pass 或 fail\",\n  \"errors\": [{\"check\": \"审核项\", \"item\": \"问题项\", \"issue\": \"问题描述\"}],\n  \"content\": { 修复后的完整单元 JSON，结构与输入一致 }\n}\n\n【判定规则】\n1. 全部通过：status=pass，errors=[]，content 原样返回。\n2. 有问题：status=fail，errors 逐条列出，content 输出修复后的完整 JSON——只改有问题的部分。\n3. 修复后必须满足全部审核项。\n4. 只报告真正违反审核项的内容，通过的项不写入 errors。\n5. 字符串值写成一行，值内禁止英文引号，用中文引号「」。\n6. 必须是完整合法 JSON。"
+        - role: user
+          text: '单元编号: {{#iter_units.item.unitId#}}
+
+            单元标题: {{#iter_units.item.titleZh#}}
+
+            单元话题: {{#iter_units.item.topic#}}
+
+            要求词数: {{#iter_units.item.wordCount#}}
+
+            规划词表: {{#iter_units.item.words#}}
+
+            内容档: {{#start_node.level#}}
+
+            待审核题目: {{#parse_content.content#}}
+
+
+            请先审核，再按系统指令输出审核修复结果 JSON。'
+        retry_config:
+          enabled: true
+          exponential_backoff:
+            enabled: true
+            max_interval: 10000
+            multiplier: 2
+          max_retries: 3
+          retry_interval: 2000
+        selected: false
+        structured_output:
+          enabled: false
+        title: 题目生成
+        type: llm
+        vision:
+          configs:
+            variable_selector: []
+          enabled: false
+      height: 88
+      id: llm_content
+      parentId: iter_units
+      position:
+        x: 120
+        y: 320
+      positionAbsolute:
+        x: 1070
+        y: 420
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1001
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        memory:
+          enabled: false
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            max_tokens: 4096
+            temperature: 0.3
+            thinking: false
+            top_p: 0.9
+          mode: chat
+          name: glm-4.5-flash
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - role: system
+          text: "你是资深的少儿与成人英语课程架构师，为 AotuEnglish 学习网站规划课程框架。\n\n【输入参数】\n\
+            - level：内容档，取值 kids-a / kids-b / teen / adult\n- topic：课程主题，例如 \"farm animals\"\n\
+            - units：期望单元数（可选，空则按档位默认）\n- goals：学习目标（可选，可能为空）\n\n\
+            【内容档定义】\n- kids-a（4-7 岁）：大图少字，每单元 6-8 个词，无长句，纯听说\n- kids-b（7-12 岁）：可含短句，每单元\
+            \ 8-12 个词，可含简单阅读\n- teen（13-16 岁）：文字为主，可含长句与语法点，每单元 10-15 个词\n\
+            - adult（17+）：信息密集，可含商务场景与复杂句式，每单元 12-20 个词\n\n【任务】\n规划课程框架，只输出框架，不输出任何具体词汇、题目或例句。\n\
+            \n【输出格式】\n只输出一个 JSON 对象，不得包含解释、前后缀或 Markdown 代码块标记：\n{\n  \"courseName\"\
+            : \"课程名称（中文）\",\n  \"description\": \"课程简介（中文，80字以内）\",\n  \"units\"\
+            : [\n    {\n      \"unitId\": \"kids-a-farm-01\",\n      \"titleZh\": \"农场动物\"\
+            ,\n      \"topic\": \"Farm Animals\",\n      \"wordCount\": 8,\n      \"estMinutes\"\
+            : 5,\n      \"words\": [\"cow\", \"duck\", \"pig\", \"horse\", \"sheep\", \"hen\"\
+            , \"goat\", \"cat\"],\n      \"distractors\": [\"car\", \"table\", \"apple\"\
+            , \"pencil\", \"chair\", \"bottle\", \"window\", \"shoe\"]\n    }\n  ]\n\
+            }\n\n【硬性规则】\n1. unitId 格式：{level}-{topic英文小写短横线}-{两位序号}，例如 kids-a-farm-01。\n\
+            2. words 数量必须等于 wordCount，且全部是英语单词（1-2 个词的小词组可以，如 ice cream）。\n\
+            3. distractors 是「干扰词」：必须与 words 同档难度、但明显不属于本单元主题，数量与 words\
+            \ 相同。用来生成错误选项，不能与 words 重复。\n4. units 数量：kids-a 默认 5，kids-b 默认\
+            \ 6，teen 默认 6，adult 默认 8；传入 units 时以传入为准。\n5. 所有单元之间主题不重复，难度递进。\n\
+            6. 每个字符串值写成一行，值内禁止英文双引号与英文单引号，需要引用时用中文引号「」。\n7. 你的输出会被程序解析，必须是完整合法的\
+            \ JSON。"
+        - role: user
+          text: '内容档: {{#start_node.level#}}
+
+            课程主题: {{#start_node.topic#}}
+
+            期望单元数: {{#start_node.units#}}
+
+            学习目标: {{#start_node.goals#}}
+
+
+            请根据以上信息，按系统指令输出课程规划 JSON。'
+        retry_config:
+          enabled: true
+          exponential_backoff:
+            enabled: true
+            max_interval: 10000
+            multiplier: 2
+          max_retries: 3
+          retry_interval: 2000
+        selected: false
+        structured_output:
+          enabled: false
+        title: 课程规划（四档分层）
+        type: llm
+        vision:
+          configs:
+            variable_selector: []
+          enabled: false
+      height: 88
+      id: llm_planner
+      position:
+        x: 334
+        y: 282
+      positionAbsolute:
+        x: 334
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        memory:
+          enabled: false
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            max_tokens: 8192
+            temperature: 0.3
+            thinking: false
+            top_p: 0.9
+          mode: chat
+          name: glm-4.5-flash
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - role: system
+          text: "你是专业的英语教学内容审核修复官，先审核单元内容，发现问题则直接修复。\n\n【输入参数】\n- unit_id / title\
+            \ / topic / grammar_focus：单元规划信息\n- 要求词汇数量 / 要求短语数量：数量要求\n- age / level：学习者信息\n\
+            - 待审核内容：单元内容 JSON（vocabulary / phrases / sentences / grammar / exercises）\n\
+            \n【审核项】\n1. 主题一致性：内容需围绕单元话题。相关的生活场景、人物、活动属于相关内容。\n2. 年龄适合：该年龄段儿童能理解的常用词汇与简单句式。\n\
+            3. 英语正确：只关注明确的拼写和语法错误，风格偏好不算错误。\n4. 翻译正确：中文释义与英文含义明显不符才算错误。\n5. 数量正确：vocabulary\
+            \ 数量等于要求词汇数量，phrases 数量等于要求短语数量，sentences 为 10，exercises 为 6。\n6. 重复内容：词汇、短语、例句完全重复才算错误。\n\
+            7. 语法结构（必查）：sentences 中每一句都要有 structure 数组，按成分标注 {\"label\": \"成分名\",\
+            \ \"word\": \"原文片段\"}。label 用中文语法术语、与该成分对应即可（如 主语、谓语、宾语、定语、状语、时间状语、频率副词、连词等，不限固定词表）；word\
+            \ 必须与句中原文完全一致（大小写一致、不含句末标点，连贯短语如 wake up 要作为整体）。缺失、每个成分都标不出来、word 与原文不符，都算错误，必须补齐改正。\n\
+            \n【输出格式】\n只输出一个 JSON 对象，不包含解释或 Markdown 代码块标记：\n{\n  \"status\": \"pass\
+            \ 或 fail\",\n  \"errors\": [\n    {\"check\": \"审核项\", \"item\": \"问题内容项原文\"\
+            , \"issue\": \"问题描述\"}\n  ],\n  \"content\": {\"vocabulary\": [], \"phrases\"\
+            : [], \"sentences\": [], \"grammar\": [], \"exercises\": []}\n}\n其中 content\
+            \ 是修复后的完整五类内容，结构与待审核内容完全一致；sentences 的每个元素都必须同时包含 sentence、translation_cn、structure\
+            \ 三个字段。\n\n【判定与修复规则】\n1. 全部通过：status 为 pass，errors 为空数组 []，content 原样返回待审核内容。\n\
+            2. 存在问题：status 为 fail，errors 逐条列出（每条 issue 一句话说清），content 输出修复后的完整内容——只修改有问题的部分，未出错的内容保持原样。\n\
+            3. 修复后必须满足全部审核项：数量严格达标、主题一致、无重复、英语与翻译正确、每句都有 structure。\n4. 只报告确实违反审核项的内容；通过的项一律不写入\
+            \ errors。数量符合要求时不要输出任何数量相关条目。\n5. 格式硬性要求：每个字符串值必须写成一行；值内禁止英文双引号和英文单引号；引用词语用中文引号「」。\n\
+            6. structure 缺失或不合格时，直接按句补齐改正后再输出；确实无法拆解的句子，structure 给空数组 []，不得省略该字段。\n\
+            7. 你的输出会被程序解析，必须输出完整且合法的 JSON。"
+        - role: user
+          text: '单元编号: {{#iter_units.item.unit_id#}}
+
+            单元标题: {{#iter_units.item.title#}}
+
+            单元话题: {{#iter_units.item.topic#}}
+
+            语法重点: {{#iter_units.item.grammar_focus#}}
+
+            要求词汇数量: {{#iter_units.item.vocabulary_count#}}
+
+            要求短语数量: {{#iter_units.item.phrase_count#}}
+
+            学习者年龄段: {{#start_node.age#}}
+
+            英语水平: {{#start_node.level#}}
+
+            待审核内容: {{#parse_content.content#}}
+
+
+            请先审核，再按系统指令输出审核修复结果 JSON。'
+        retry_config:
+          enabled: true
+          exponential_backoff:
+            enabled: true
+            max_interval: 10000
+            multiplier: 2
+          max_retries: 3
+          retry_interval: 2000
+        selected: false
+        structured_output:
+          enabled: false
+        title: 题目审核+修复
+        type: llm
+        vision:
+          configs:
+            variable_selector: []
+          enabled: false
+      height: 88
+      id: llm_review_fix
+      parentId: iter_units
+      position:
+        x: 728
+        y: 320
+      positionAbsolute:
+        x: 1678
+        y: 420
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1001
+    - data:
+        code: |
+          import json
+          import re
+
+
+          ALLOWED_TYPES = ("listen_choose_image", "tap_to_read", "read_choose", "cloze")
+
+
+          def extract(text: str) -> dict:
+              t = text.strip()
+              m = re.search(r"```(?:json)?\s*(.*?)```", t, re.S)
+              if m:
+                  t = m.group(1).strip()
+              s = t.find("{")
+              e = t.rfind("}")
+              if s == -1 or e == -1:
+                  raise ValueError("未找到 JSON 对象")
+              t = t[s:e + 1]
+              try:
+                  return json.loads(t)
+              except json.JSONDecodeError:
+                  fixed = re.sub(r",\s*([\]}])", r"\1", t)
+                  return json.loads(fixed)
+
+
+          def normalize_question(q: dict, unit_id: str, idx: int) -> dict:
+              qtype = str(q.get("type") or "").strip()
+              if qtype not in ALLOWED_TYPES:
+                  raise ValueError("非法题型: " + qtype)
+              opts = q.get("options")
+              if not isinstance(opts, list) or not opts:
+                  raise ValueError("题目缺少 options")
+              norm_opts = []
+              for o in opts:
+                  if not isinstance(o, dict):
+                      continue
+                  norm_opts.append({
+                      "id": str(o.get("id") or chr(97 + len(norm_opts))),
+                      "imagePrompt": str(o.get("imagePrompt") or ""),
+                      "text": str(o.get("text") or ""),
+                      "correct": bool(o.get("correct")),
+                  })
+              if sum(1 for o in norm_opts if o["correct"]) != 1:
+                  raise ValueError("题目必须恰好一个正确选项: " + str(q.get("id")))
+              return {
+                  "id": unit_id + "-q" + str(idx),
+                  "type": qtype,
+                  "promptZh": str(q.get("promptZh") or ""),
+                  "audioText": str(q.get("audioText") or ""),
+                  "options": norm_opts,
+              }
+
+
+          def main(text: str, unit_id: str, word_count: int) -> dict:
+              data = extract(text)
+              qs = data.get("questions")
+              if not isinstance(qs, list) or not qs:
+                  raise ValueError("缺少 questions")
+              questions = []
+              for i, q in enumerate(qs):
+                  if isinstance(q, dict):
+                      questions.append(normalize_question(q, unit_id, i + 1))
+              if not questions:
+                  raise ValueError("没有可用题目")
+              content = {
+                  "unitId": unit_id,
+                  "level": str(data.get("level") or ""),
+                  "topic": str(data.get("topic") or ""),
+                  "titleZh": str(data.get("titleZh") or ""),
+                  "wordCount": int(word_count or len(questions)),
+                  "estMinutes": int(data.get("estMinutes") or max(3, len(questions))),
+                  "questions": questions,
+              }
+              return {"content": json.dumps(content, ensure_ascii=False), "question_count": len(questions)}
+
+        code_language: python3
+        desc: 容错解析单元内容 JSON
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        outputs:
+          content:
+            children: null
+            type: string
+          question_count:
+            children: null
+            type: number
+        selected: false
+        title: 题目解析
+        type: code
+        variables:
+        - value_selector:
+          - llm_content
+          - text
+          variable: text
+        - value_selector:
+          - iter_units
+          - item
+          - unitId
+          variable: unit_id
+        - value_selector:
+          - iter_units
+          - item
+          - wordCount
+          variable: word_count
+      height: 80
+      id: parse_content
+      parentId: iter_units
+      position:
+        x: 424
+        y: 320
+      positionAbsolute:
+        x: 1374
+        y: 420
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1001
+    - data:
+        code: "import json\nimport re\n\n\ndef extract(text: str) -> dict:\n    t = text.strip()\n    m = re.search(r\"```(?:json)?\\s*(.*?)```\", t, re.S)\n    if m:\n        t = m.group(1).strip()\n    s = t.find(\"{\")\n    e = t.rfind(\"}\")\n    if s == -1 or e == -1:\n        raise ValueError(\"未找到 JSON 对象\")\n    t = t[s:e + 1]\n    try:\n        return json.loads(t)\n    except json.JSONDecodeError:\n        fixed = re.sub(r\",\\s*([\\]}])\", r\"\\1\", t)\n        return json.loads(fixed)\n\n\ndef main(text: str, unit_id: str, title: str) -> dict:\n    data = extract(text)\n    status = data.get(\"status\")\n    errors = data.get(\"errors\") or []\n    content = data.get(\"content\")\n    if not isinstance(content, dict):\n        raise ValueError(\"缺少 content\")\n    qs = content.get(\"questions\")\n    if not isinstance(qs, list) or not qs:\n        raise ValueError(\"content.questions 为空\")\n    if status not in (\"pass\", \"fail\"):\n        status = \"fail\" if errors else \"pass\"\n    if status == \"pass\":\n        errors = []\n    return {\"unit\": {\n        \"unitId\": unit_id,\n        \"titleZh\": title,\n        \"reviewStatus\": \"pass\" if status == \"pass\" else \"repaired\",\n        \"errors\": errors,\n        \"content\": content,\n    }}\n"
+        code_language: python3
+        desc: 解析审核修复结果，组装单元输出
+        isInIteration: true
+        isInLoop: false
+        iteration_id: iter_units
+        outputs:
+          unit:
+            children: null
+            type: object
+        selected: false
+        title: 单元结果
+        type: code
+        variables:
+        - value_selector:
+          - llm_review_fix
+          - text
+          variable: text
+        - value_selector:
+          - iter_units
+          - item
+          - unit_id
+          variable: unit_id
+        - value_selector:
+          - iter_units
+          - item
+          - title
+          variable: title
+      height: 80
+      id: parse_final
+      parentId: iter_units
+      position:
+        x: 1032
+        y: 320
+      positionAbsolute:
+        x: 1982
+        y: 420
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1001
+    - data:
+        code: |
+          import json
+          import re
+
+
+          def extract(text: str) -> dict:
+              t = text.strip()
+              m = re.search(r"```(?:json)?\s*(.*?)```", t, re.S)
+              if m:
+                  t = m.group(1).strip()
+              s = t.find("{")
+              e = t.rfind("}")
+              if s == -1 or e == -1:
+                  raise ValueError("未找到 JSON 对象")
+              t = t[s:e + 1]
+              try:
+                  return json.loads(t)
+              except json.JSONDecodeError:
+                  fixed = re.sub(r",\s*([\]}])", r"\1", t)
+                  return json.loads(fixed)
+
+
+          def main(text: str) -> dict:
+              plan = extract(text)
+              course_name = plan.get("courseName") or ""
+              description = plan.get("description") or ""
+              units = plan.get("units")
+              if not isinstance(units, list) or not units:
+                  raise ValueError("缺少 units")
+              clean = []
+              for u in units:
+                  if not isinstance(u, dict):
+                      continue
+                  uid = str(u.get("unitId") or "").strip()
+                  if not uid:
+                      raise ValueError("unit 缺少 unitId")
+                  words = [str(w).strip() for w in (u.get("words") or []) if str(w).strip()]
+                  dist = [str(w).strip() for w in (u.get("distractors") or []) if str(w).strip()]
+                  if not words:
+                      raise ValueError("unit 缺少 words: " + uid)
+                  clean.append({
+                      "unitId": uid,
+                      "titleZh": str(u.get("titleZh") or ""),
+                      "topic": str(u.get("topic") or ""),
+                      "wordCount": int(u.get("wordCount") or len(words)),
+                      "estMinutes": int(u.get("estMinutes") or 5),
+                      "words": words,
+                      "distractors": dist,
+                  })
+              if not clean:
+                  raise ValueError("没有可用单元")
+              return {"course_name": course_name, "description": description, "units": clean}
+
+        code_language: python3
+        desc: 解析课程规划：课程名、简介、单元数组
+        outputs:
+          course_name:
+            children: null
+            type: string
+          description:
+            children: null
+            type: string
+          units:
+            children: null
+            type: array[object]
+        selected: false
+        title: 规划解析
+        type: code
+        variables:
+        - value_selector:
+          - llm_planner
+          - text
+          variable: text
+      height: 96
+      id: parse_plan
+      position:
+        x: 638
+        y: 282
+      positionAbsolute:
+        x: 638
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: level
+          max_length: null
+          options:
+          - kids-a
+          - kids-b
+          - teen
+          - adult
+          required: true
+          type: select
+          variable: level
+        - label: topic
+          max_length: null
+          options: []
+          required: true
+          type: text-input
+          variable: topic
+        - label: units
+          max_length: null
+          options: []
+          required: false
+          type: number
+          variable: units
+        - label: goals
+          max_length: null
+          options: []
+          required: false
+          type: text-input
+          variable: goals
+      height: 187
+      id: start_node
+      position:
+        x: 30
+        y: 282
+      positionAbsolute:
+        x: 30
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    viewport:
+      x: -107.82634899780533
+      y: 209.95223633986012
+      zoom: 0.5000000000000007
+  rag_pipeline_variables: []

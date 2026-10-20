@@ -1,0 +1,294 @@
+[
+  {
+    "file": "default-1440x900.png",
+    "state": "default",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "intro-1440x900.png",
+    "state": "intro",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 1521,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "pause-1440x900.png",
+    "state": "pause",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 1514,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "locked-1440x900.png",
+    "state": "locked",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 1528,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "default-768x1024.png",
+    "state": "default",
+    "size": "768x1024",
+    "zoom": 1,
+    "animationWaitMs": 1443,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "intro-768x1024.png",
+    "state": "intro",
+    "size": "768x1024",
+    "zoom": 1,
+    "animationWaitMs": 1529,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "pause-768x1024.png",
+    "state": "pause",
+    "size": "768x1024",
+    "zoom": 1,
+    "animationWaitMs": 1513,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "locked-768x1024.png",
+    "state": "locked",
+    "size": "768x1024",
+    "zoom": 1,
+    "animationWaitMs": 1524,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "default-390x844.png",
+    "state": "default",
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 1411,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "intro-390x844.png",
+    "state": "intro",
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 1510,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "pause-390x844.png",
+    "state": "pause",
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 1520,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "locked-390x844.png",
+    "state": "locked",
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 1511,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "default-1440x900-@2x.png",
+    "state": "default",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 1462,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "default-768x1024-@2x.png",
+    "state": "default",
+    "size": "768x1024",
+    "zoom": 2,
+    "animationWaitMs": 1521,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "default-390x844-@2x.png",
+    "state": "default",
+    "size": "390x844",
+    "zoom": 2,
+    "animationWaitMs": 1521,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "motion-probe",
+    "state": "default",
+    "size": "1440x900",
+    "zoom": 1,
+    "motion": {
+      "load": {
+        "elements": 20,
+        "loops": 2,
+        "maxMove": 49,
+        "maxSize": 5.062,
+        "maxOpacity": 1,
+        "top": [
+          {
+            "el": "svg",
+            "move": 14,
+            "size": 5.062,
+            "opacity": 0.96,
+            "loop": false,
+            "sources": [
+              "css:stamp-in"
+            ]
+          },
+          {
+            "el": "svg",
+            "move": 13,
+            "size": 3.252,
+            "opacity": 0.8,
+            "loop": false,
+            "sources": [
+              "css:stamp-in"
+            ]
+          },
+          {
+            "el": "svg",
+            "move": 12,
+            "size": 2.466,
+            "opacity": 0.67,
+            "loop": false,
+            "sources": [
+              "css:stamp-in"
+            ]
+          },
+          {
+            "el": "span.node-badge",
+            "move": 49,
+            "size": 0.681,
+            "opacity": 0,
+            "loop": true,
+            "sources": [
+              "css:current-breathe",
+              "css:dust-ring"
+            ]
+          },
+          {
+            "el": "button.node.node--current",
+            "move": 40,
+            "size": 0.502,
+            "opacity": 0.78,
+            "loop": false,
+            "sources": [
+              "css:current-drop"
+            ]
+          },
+          {
+            "el": "button.node.node--done",
+            "move": 24,
+            "size": 0.411,
+            "opacity": 0.98,
+            "loop": false,
+            "sources": [
+              "css:node-pop"
+            ]
+          },
+          {
+            "el": "div.flag",
+            "move": 17,
+            "size": 0.403,
+            "opacity": 0.97,
+            "loop": false,
+            "sources": [
+              "css:node-pop"
+            ]
+          },
+          {
+            "el": "button.node.node--done",
+            "move": 23,
+            "size": 0.379,
+            "opacity": 0.93,
+            "loop": false,
+            "sources": [
+              "css:node-pop"
+            ]
+          }
+        ]
+      },
+      "hero": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "layers": 0
+      },
+      "scroll": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "scrollable": false
+      }
+    },
+    "issues": []
+  },
+  {
+    "file": "motion-entry-end.jpg",
+    "state": "default",
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "entry",
+    "issues": [
+      "录屏：没装 ffmpeg，只留了 motion-entry-start/mid/end.jpg 三帧"
+    ],
+    "frames": {
+      "start": {
+        "file": "motion-entry-start.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 290
+      },
+      "mid": {
+        "file": "motion-entry-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 1222
+      },
+      "end": {
+        "file": "motion-entry-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 3351
+      }
+    },
+    "sampling": {
+      "mode": "entry"
+    },
+    "durationMs": 3351,
+    "consistency": {
+      "status": "moving",
+      "reference": "motion-entry-end.jpg",
+      "different": true,
+      "changedPixels": 80,
+      "maxTilePixels": 65,
+      "pixelRatio": 0.0000617283950617284
+    },
+    "failed": true
+  }
+]

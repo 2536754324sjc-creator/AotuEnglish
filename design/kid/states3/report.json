@@ -1,0 +1,38 @@
+[
+  {
+    "file": "sheet-1440x900.png",
+    "state": "sheet",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "pause-1440x900.png",
+    "state": "pause",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 98,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "sheet-390x844.png",
+    "state": "sheet",
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "pause-390x844.png",
+    "state": "pause",
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://pixel.veritone-ce.com/",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://stats.wp.com/e-202643.js",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://dev.visualwebsiteoptimizer.com/j.php?a=732749&u=https%3A%2F%2Flingokids.com%2F&vn=2.2&ph=1&st=7234.5&x=true",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://www.googletagmanager.com/gtag/js?id=GT-NGBR9SB",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://dev.visualwebsiteoptimizer.com/ee.gif?a=732749&e=loading_failure:https://dev.visualwebsiteoptimizer.com/j.php?a=732749&u=https%3A%2F%2Flingokids.com%2F&vn=2.2&ph=1&st=7234.5&x=true",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://cdn.mgln.ai/pixel.min.js"
+    ],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 6,
+        "examples": [
+          "h2.elementor-heading-title.elementor-size-default「Incredible content. On d」（1.98:1）",
+          "h2.elementor-heading-title.elementor-size-default「Serious about fun」（1.11:1）",
+          "p「Designed by parents and 」（1.65:1）"
+        ]
+      },
+      {
+        "rule": "longMeasure",
+        "label": "正文行太长",
+        "count": 1,
+        "examples": [
+          "div#onetrust-policy-text「By clicking “Accept All 」（每行约 100 个字符）"
+        ]
+      }
+    ]
+  }
+]

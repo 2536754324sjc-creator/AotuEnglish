@@ -1,0 +1,55 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [
+      "加载错误：Failed to load resource: the server responded with a status of 404 () https://lingokids.com/,https:/www.abcmouse.com/,https:/www.starfall.com",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://dev.visualwebsiteoptimizer.com/j.php?a=732749&u=https%3A%2F%2Flingokids.com%2F%2Chttps%3A%2Fwww.abcmouse.com%2F%2Chttps%3A%2Fwww.starfall.com&vn=2.2&ph=1&st=12505.299999998882&x=true",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://www.googletagmanager.com/gtag/js?id=GT-NGBR9SB",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://pixel.veritone-ce.com/",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://stats.wp.com/e-202643.js",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://dev.visualwebsiteoptimizer.com/ee.gif?a=732749&e=loading_failure:https://dev.visualwebsiteoptimizer.com/j.php?a=732749&u=https%3A%2F%2Flingokids.com%2F%2Chttps%3A%2Fwww.abcmouse.com%2F%2Chttps%3A%2Fwww.starfall.com&vn=2.2&ph=1&st=12505.299999998882&x=true",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://www.googletagmanager.com/gtm.js?id=GTM-WC2PLW",
+      "加载错误：Failed to load resource: net::ERR_CONNECTION_CLOSED https://cdn.mgln.ai/pixel.min.js"
+    ],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "div.elementor-element.elementor-element-a00002「404 - PAGE NOT FOUND」"
+        ]
+      },
+      {
+        "rule": "tightLeading",
+        "label": "多行正文行高过紧",
+        "count": 1,
+        "examples": [
+          "p「We couldn’t find the pag」（1.20）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 3,
+        "examples": [
+          "div#onetrust-policy-text「By clicking “Accept All 」（2.52:1）",
+          "a「Cookie Policy」（2.52:1）",
+          "button#onetrust-pc-btn-handler.cookie-setting-link「Cookies Settings」（2.52:1）"
+        ]
+      },
+      {
+        "rule": "longMeasure",
+        "label": "正文行太长",
+        "count": 1,
+        "examples": [
+          "div#onetrust-policy-text「By clicking “Accept All 」（每行约 100 个字符）"
+        ]
+      }
+    ]
+  }
+]

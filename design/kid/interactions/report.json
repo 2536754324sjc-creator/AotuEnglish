@@ -1,0 +1,32 @@
+[
+  {
+    "file": "page-locked.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "locked",
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "page-start.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "start",
+    "animationWaitMs": 1523,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "page-sound.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "sound",
+    "animationWaitMs": 1188,
+    "issues": [],
+    "lint": []
+  }
+]

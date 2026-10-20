@@ -1,0 +1,494 @@
+.map {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 100%);
+}
+
+/* 首页切片：带圆角的卡片式露出 */
+.compact {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  aspect-ratio: 1440 / 620;
+  border-radius: var(--r-lg);
+}
+
+.skyGlow {
+  position: absolute;
+  top: -14%;
+  right: 8%;
+  width: min(420px, 34vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 197, 61, 0.55) 0%, rgba(255, 197, 61, 0) 68%);
+  pointer-events: none;
+}
+
+.hills {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 56%;
+  display: block;
+  pointer-events: none;
+}
+
+.trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: visible;
+}
+
+.trailMobile {
+  display: none;
+}
+
+.trailBase,
+.trailFill,
+.trailDash {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.trailBase {
+  stroke: var(--white, #fff);
+  stroke-width: 58;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawTrail 1.1s 0.15s cubic-bezier(0.3, 0.8, 0.3, 1) forwards;
+}
+
+.trailFill {
+  stroke: #cfe3fa;
+  stroke-width: 42;
+  opacity: 0;
+  animation: trailIn 0.5s 0.55s ease forwards;
+}
+
+.trailDash {
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-dasharray: 2 20;
+  opacity: 0;
+  animation: trailIn 0.5s 0.55s ease forwards;
+}
+
+@keyframes drawTrail {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes trailIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.nodes {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+
+.node {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  animation: nodePop 0.5s var(--delay) cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+
+@keyframes nodePop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.badge {
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--white, #fff);
+  border: 6px solid var(--white, #fff);
+  box-shadow: 0 7px 0 rgba(18, 35, 63, 0.08), 0 16px 26px rgba(18, 35, 63, 0.1);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.icon {
+  width: calc(var(--size) * 0.42);
+  height: calc(var(--size) * 0.42);
+  display: block;
+}
+
+.node:hover .badge {
+  transform: translateY(-3px);
+}
+
+.node:active .badge {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 rgba(18, 35, 63, 0.08), 0 6px 12px rgba(18, 35, 63, 0.08);
+}
+
+/* 已完成 */
+.done .badge {
+  border-color: #d4efdd;
+  color: var(--green);
+}
+
+.done .badge::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  bottom: -3px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 3px solid var(--white, #fff);
+}
+
+.check {
+  position: absolute;
+  right: 1px;
+  bottom: 3px;
+  width: 16px;
+  height: 16px;
+  color: var(--white, #fff);
+  z-index: 2;
+}
+
+/* 当前 */
+.current .badge {
+  border-color: var(--white, #fff);
+  background: linear-gradient(180deg, #4a93ff 0%, var(--blue) 58%, #2873e9 100%);
+  color: var(--white, #fff);
+  box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.9), 0 0 0 16px rgba(255, 197, 61, 0.42),
+    0 13px 0 var(--blue-deep), 0 28px 40px rgba(18, 35, 63, 0.2);
+  animation: breathe 3.6s ease-in-out infinite;
+}
+
+/* 未解锁 */
+.locked .badge {
+  border-color: #dbe7f5;
+  background: #eaf2fb;
+  color: #9bb0cb;
+  box-shadow: 0 6px 0 #d6e3f2, 0 12px 20px rgba(18, 35, 63, 0.06);
+  cursor: not-allowed;
+}
+
+.lockMini {
+  position: absolute;
+  right: 2px;
+  bottom: 4px;
+  width: 15px;
+  height: 15px;
+  color: var(--white, #fff);
+  z-index: 2;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.9), 0 0 0 16px rgba(255, 197, 61, 0.42),
+      0 13px 0 var(--blue-deep), 0 28px 40px rgba(18, 35, 63, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.94), 0 0 0 21px rgba(255, 197, 61, 0.3),
+      0 13px 0 var(--blue-deep), 0 32px 46px rgba(18, 35, 63, 0.22);
+  }
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 15px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 0 rgba(18, 35, 63, 0.06);
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.current .label {
+  padding: 8px 10px 8px 18px;
+  font-size: 18px;
+  color: var(--blue-strong);
+  box-shadow: 0 5px 0 rgba(18, 35, 63, 0.08);
+}
+
+.locked .label {
+  color: var(--ink-3);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.play {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--sun);
+  color: var(--ink);
+  box-shadow: 0 3px 0 var(--sun-deep);
+}
+
+.play svg {
+  width: 13px;
+  height: 13px;
+  margin-left: 2px;
+}
+
+/* 吉祥物：锚定到当前节点的右上方，跟随节点位置 */
+.coach {
+  position: absolute;
+  left: calc(var(--coach-x) + 92px);
+  top: calc(var(--coach-y) - 150px);
+  z-index: 6;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.coachStar {
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 7px 0 rgba(231, 161, 0, 0.18));
+}
+
+.bubble {
+  position: relative;
+  margin-bottom: 20px;
+  max-width: 230px;
+  padding: 11px 16px;
+  border-radius: 20px 20px 20px 6px;
+  background: var(--white, #fff);
+  box-shadow: var(--shadow-sm);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+@media (max-width: 900px) {
+  .bubble {
+    display: none;
+  }
+  .coachStar {
+    width: 68px;
+    height: 68px;
+  }
+}
+
+.compact .coach {
+  display: none;
+}
+
+/* 首页切片：容器更扁，节点等比缩小，避免挤成一团 */
+.compact .badge {
+  width: calc(var(--size) * 0.62);
+  height: calc(var(--size) * 0.62);
+  border-width: 5px;
+}
+
+.compact .icon {
+  width: calc(var(--size) * 0.26);
+  height: calc(var(--size) * 0.26);
+}
+
+.compact .label {
+  font-size: 13px;
+  min-height: 30px;
+  padding: 5px 12px;
+}
+
+.compact .current .label {
+  font-size: 15px;
+  padding: 6px 9px 6px 14px;
+}
+
+.compact .reward {
+  left: auto;
+  right: 18px;
+  top: 16px;
+  bottom: auto;
+  padding: 7px 14px 7px 9px;
+  transform: scale(0.86);
+  transform-origin: right top;
+}
+
+/* 宝箱进度：左下角 */
+.reward {
+  position: absolute;
+  left: clamp(20px, 4vw, 56px);
+  bottom: 26px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px 9px 11px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
+}
+
+.rewardChest {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--sun);
+  color: #7a4b00;
+  box-shadow: 0 4px 0 var(--sun-deep);
+}
+
+.rewardChest svg {
+  width: 25px;
+  height: 25px;
+}
+
+.rewardCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rewardText {
+  font-size: 14px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.rewardTrack {
+  width: 112px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: #e3edf9;
+  overflow: hidden;
+}
+
+.rewardTrack span {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--green), #67d28f);
+}
+
+@media (max-width: 720px) {
+  .map {
+    position: relative;
+    inset: auto;
+    height: 1000px;
+    min-height: 1000px;
+  }
+  .compact {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1440 / 620;
+  }
+  .trailDesktop {
+    display: none;
+  }
+  .trailMobile {
+    display: block;
+    height: 1000px;
+  }
+  .label {
+    font-size: 15px;
+  }
+  .current .label {
+    font-size: 17px;
+  }
+  .coach {
+    display: none;
+  }
+  .reward {
+    left: 16px;
+    bottom: 16px;
+  }
+  /* 手机端换用竖排坐标，节点尺寸整体缩小 28% */
+  .node {
+    left: var(--mx);
+    top: var(--my);
+    gap: 8px;
+  }
+  .badge {
+    width: calc(var(--size) * 0.72);
+    height: calc(var(--size) * 0.72);
+    border-width: 4px;
+  }
+  .icon {
+    width: calc(var(--size) * 0.3);
+    height: calc(var(--size) * 0.3);
+  }
+  .rewardText {
+    font-size: 13px;
+  }
+  .rewardTrack {
+    width: 84px;
+  }
+
+  /* 首页切片的手机版：改用竖排坐标，高度收到一屏能看全 */
+  .compact {
+    height: 420px;
+    min-height: 420px;
+  }
+  .compact .node {
+    left: var(--mx);
+    top: var(--my);
+  }
+  .compact .badge {
+    width: calc(var(--size) * 0.42);
+    height: calc(var(--size) * 0.42);
+    border-width: 4px;
+  }
+  .compact .icon {
+    width: calc(var(--size) * 0.2);
+    height: calc(var(--size) * 0.2);
+  }
+  .compact .label {
+    font-size: 12px;
+    min-height: 26px;
+    padding: 4px 10px;
+  }
+  .compact .current .label {
+    font-size: 13px;
+    padding: 5px 8px 5px 12px;
+  }
+  .compact .reward {
+    display: none;
+  }
+}

@@ -1,0 +1,39 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 1,
+        "examples": [
+          "h2.header-large「Help every child learn t」（上 10px，下 15px）"
+        ]
+      },
+      {
+        "rule": "tightLeading",
+        "label": "多行正文行高过紧",
+        "count": 14,
+        "examples": [
+          "p.header-small「Starfall's Learn-to-Read」（1.20）",
+          "p「Master the ABCs with int」（1.20）",
+          "p「Develop phonics skills t」（1.20）"
+        ]
+      },
+      {
+        "rule": "longMeasure",
+        "label": "正文行太长",
+        "count": 2,
+        "examples": [
+          "p.footer-copyright-text「The Starfall Website is 」（每行约 131 个字符）",
+          "p「Starfall has no advertis」（每行约 167 个字符）"
+        ]
+      }
+    ]
+  }
+]

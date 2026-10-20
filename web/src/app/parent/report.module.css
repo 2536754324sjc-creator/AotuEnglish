@@ -1,0 +1,143 @@
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3vw, 32px);
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.range {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* 三个数字：一行，不用卡片盒子 */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 4vw, 48px);
+  padding: 24px 28px;
+  background: #fff;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.6vw, 44px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.statDivider {
+  margin: 0 4px;
+  font-size: 0.55em;
+  color: var(--ink-3);
+}
+
+.statLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+/* 区块 */
+.block {
+  background: #fff;
+  border-radius: var(--r-md);
+  padding: 22px 24px 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.blockTitle {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* 薄弱环节 */
+.weak {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.weakItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: #fff8e8;
+}
+
+.sound {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: #8a5a00;
+  min-width: 48px;
+}
+
+.weakNote {
+  flex: 1 1 auto;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.weakBtn {
+  flex: 0 0 auto;
+}
+
+.none {
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-3);
+  background: var(--sky-1);
+  border-radius: var(--r-sm);
+}
+
+@media (max-width: 720px) {
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 20px;
+  }
+  .weakItem {
+    flex-wrap: wrap;
+  }
+  .weakNote {
+    flex-basis: 100%;
+    order: 3;
+  }
+}

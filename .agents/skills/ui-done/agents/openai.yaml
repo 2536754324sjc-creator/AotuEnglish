@@ -1,0 +1,8 @@
+# Optional OpenAI host adapter. The vendor-neutral runtime contract lives in ../SKILL.md.
+interface:
+  display_name: "UI Done"
+  short_description: "持续负责 React 前端调研、设计、代码改动与真实浏览器验收"
+  default_prompt: "Use $ui-done and its applicable references: identify the current design decision, show and discuss visible choices before dependent implementation, then develop the chosen integrated sample with the required stack; honor explicit autonomous delivery and keep local repairs scoped."
+
+policy:
+  allow_implicit_invocation: true

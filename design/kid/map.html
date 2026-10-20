@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学习地图 · AotuEnglish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-1:#f2f9ff;
+    --sky-2:#dceeff;
+    --ink:#12233f;
+    --ink-2:#40567a;
+    --ink-3:#6f86a6;
+    --blue:#2f7cf6;
+    --blue-strong:#1f66db;
+    --blue-deep:#15479e;
+    --blue-soft:#e8f2ff;
+    --sun:#ffc53d;
+    --sun-deep:#e7a100;
+    --green:#39b96b;
+    --green-deep:#228a4c;
+    --green-soft:#e4f7ea;
+    --white:#ffffff;
+    --line:#d7e6f7;
+    --shadow-sm:0 4px 0 rgba(18,35,63,.06), 0 10px 22px rgba(18,35,63,.08);
+    --shadow-md:0 10px 0 rgba(18,35,63,.07), 0 22px 40px rgba(18,35,63,.12);
+    --r-lg:32px;
+    --r-md:24px;
+    --r-sm:18px;
+    --font:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+    --display:"Baloo 2","Noto Sans SC",sans-serif;
+    /* 中文展示体：和 Baloo 2 同为圆润性格，避免「圆数字 + 系统黑体」两种声音 */
+    --round:"ZCOOL KuaiLe","Baloo 2","Noto Sans SC",sans-serif;
+    --topbar:96px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  [hidden]{display:none !important}
+  body.sheet-open{overflow:hidden}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:var(--sky-1);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  button,a{font-family:inherit}
+  button{cursor:pointer}
+  h1,h2,p{margin:0}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:4px solid var(--sun);outline-offset:4px}
+
+  .app{
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    background:linear-gradient(180deg,var(--sky-1) 0%,var(--sky-2) 100%);
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:relative;
+    z-index:20;
+    height:var(--topbar);
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+    padding:0 clamp(20px,4vw,56px);
+    animation:bar-in .5s cubic-bezier(.2,.8,.3,1) both;
+  }
+  @keyframes bar-in{
+    from{opacity:0;transform:translateY(-10px)}
+    to{opacity:1;transform:none}
+  }
+
+  .child{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+    min-height:64px;
+    border:0;
+    background:transparent;
+    padding:6px;
+    margin:-6px;
+    margin-right:auto;
+    border-radius:20px;
+    text-align:left;
+    color:var(--ink);
+  }
+  .avatar{
+    width:54px;
+    height:54px;
+    flex:0 0 auto;
+    border-radius:50%;
+    background:#ffe0b6;
+    border:3px solid var(--white);
+    box-shadow:0 5px 0 rgba(18,35,63,.08);
+    overflow:hidden;
+    display:grid;
+    place-items:center;
+  }
+  .avatar svg{width:100%;height:100%;display:block}
+  .child-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .child-name{
+    font-family:var(--display);
+    font-size:19px;
+    line-height:1.1;
+    font-weight:800;
+    letter-spacing:.01em;
+    white-space:nowrap;
+  }
+
+  .today{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 18px;
+    border-radius:999px;
+    background:rgba(255,255,255,.86);
+    box-shadow:var(--shadow-sm);
+    white-space:nowrap;
+  }
+  .today-label{font-size:15px;font-weight:700;color:var(--ink-2)}
+  /* 今日进度用「分段填满」，和左下宝箱进度同一套语汇；星形只留给星星货币 */
+  .today-segs{display:flex;align-items:center;gap:4px}
+  .today-segs i{
+    display:block;
+    width:15px;
+    height:10px;
+    border-radius:5px;
+    background:#dbe7f5;
+  }
+  .today-segs i.is-on{background:linear-gradient(90deg,var(--green),#67d28f)}
+  .today-count{
+    font-family:var(--display);
+    font-size:19px;
+    font-weight:800;
+    line-height:1;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .top-actions{display:flex;align-items:center;gap:10px}
+  @media (min-width:740px){
+    .today{position:absolute;left:50%;transform:translateX(-50%)}
+  }
+  .star-count{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    height:56px;
+    padding:0 16px;
+    border-radius:999px;
+    background:var(--white);
+    box-shadow:var(--shadow-sm);
+    font-family:var(--display);
+    font-size:21px;
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+  }
+  .star-count .icon{width:23px;height:23px;color:var(--sun)}
+  .icon-btn{
+    width:64px;
+    height:64px;
+    flex:0 0 auto;
+    display:grid;
+    place-items:center;
+    border:0;
+    border-radius:50%;
+    background:var(--white);
+    color:var(--ink-2);
+    box-shadow:var(--shadow-sm);
+    transition:transform .16s ease, box-shadow .16s ease, color .16s ease;
+  }
+  .icon-btn .icon{width:23px;height:23px}
+  .icon-btn:hover{color:var(--blue-strong)}
+  .icon-btn:active{
+    transform:translateY(3px);
+    box-shadow:0 1px 0 rgba(18,35,63,.06), 0 4px 10px rgba(18,35,63,.08);
+  }
+  .icon-btn[aria-pressed="false"]{color:var(--ink-3);background:#f4f8fd}
+
+  /* ---------- map stage ---------- */
+  .map{
+    position:relative;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:hidden;
+  }
+  .map-canvas{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+  }
+  .sky-glow{
+    position:absolute;
+    top:-14%;
+    right:8%;
+    width:min(420px,34vw);
+    aspect-ratio:1;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(255,197,61,.55) 0%,rgba(255,197,61,0) 68%);
+    pointer-events:none;
+  }
+  .cloud{
+    position:absolute;
+    color:var(--white);
+    opacity:.78;
+    pointer-events:none;
+  }
+  .cloud-a{top:8%;left:5%;width:150px}
+  .cloud-b{top:18%;right:4%;width:110px;opacity:.58}
+  .cloud-c{top:42%;left:2%;width:84px;opacity:.42}
+
+  .hills{
+    position:absolute;
+    left:0;
+    bottom:0;
+    width:100%;
+    height:56%;
+    display:block;
+    pointer-events:none;
+  }
+  /* 最近的一道坡：压在最前面，路和道具在这里被挡住一截，「有前后」才成立 */
+  .hills-front{
+    position:absolute;
+    left:0;
+    bottom:0;
+    z-index:4;
+    width:100%;
+    height:120px;
+    display:block;
+    pointer-events:none;
+  }
+
+  .trail{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:2;
+    overflow:visible;
+  }
+  .trail-mobile{display:none}
+  .trail-base,
+  .trail-done-fill,
+  .trail-future-fill,
+  .trail-dash{
+    fill:none;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+  }
+  /* 路面压出阴影：路是躺在草坡上的，不是浮在天空里的一条线 */
+  .trail-base{stroke:var(--white);stroke-width:58;filter:drop-shadow(0 12px 11px rgba(18,35,63,.14))}
+  .trail-done-fill{stroke:#c8e9d1;stroke-width:42}
+  .trail-future-fill{stroke:#cfe3fa;stroke-width:42}
+  .trail-dash{stroke:var(--white);stroke-width:5;stroke-dasharray:2 20;opacity:.95}
+  .trail-base{stroke-dasharray:100;stroke-dashoffset:100;animation:draw-trail .95s .05s cubic-bezier(.3,.8,.3,1) forwards}
+  .trail-done-fill{stroke-dasharray:100;stroke-dashoffset:100;animation:draw-trail .78s .12s cubic-bezier(.35,.85,.3,1) forwards}
+  .trail-future-fill{opacity:0;animation:trail-in .45s .92s ease forwards}
+  .trail-dash{opacity:0;animation:trail-in .4s 1s ease forwards}
+  @keyframes draw-trail{to{stroke-dashoffset:0}}
+  @keyframes trail-in{to{opacity:1}}
+
+  /* ---------- trail nodes ---------- */
+  .node{
+    position:absolute;
+    left:var(--x);
+    top:var(--y);
+    z-index:5;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:11px;
+    border:0;
+    background:transparent;
+    padding:0;
+    color:var(--ink);
+    animation:node-pop .5s calc(var(--i) * 145ms + 330ms) cubic-bezier(.2,.9,.3,1.25) both;
+  }
+  @keyframes node-pop{
+    from{opacity:0;transform:translate(-50%,-50%) scale(.72)}
+    to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  }
+  .node-badge{
+    position:relative;
+    width:var(--size);
+    height:var(--size);
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:var(--white);
+    border:6px solid var(--white);
+    box-shadow:0 7px 0 rgba(18,35,63,.08), 0 16px 26px rgba(18,35,63,.10);
+    transition:transform .16s ease, box-shadow .16s ease;
+  }
+  .node-badge .icon{width:calc(var(--size) * .42);height:calc(var(--size) * .42);display:block}
+  .node:hover .node-badge{transform:translateY(-3px)}
+  .node:active .node-badge{transform:translateY(3px);box-shadow:0 2px 0 rgba(18,35,63,.08), 0 6px 12px rgba(18,35,63,.08)}
+  .node:active{transform:translate(-50%,-50%)}
+
+  .node--done{--size:clamp(84px, 9.6vh, 100px);--i:1}
+  .node--done:nth-of-type(1){--x:14%;--y:63%}
+  .node--done:nth-of-type(2){--x:29%;--y:41%;--i:2}
+  .node--done:nth-of-type(3){--x:45%;--y:57%;--i:3}
+  .node--done .node-badge{border-color:#d4efdd;background:var(--white);color:var(--green)}
+  .node--done .node-badge::after{
+    content:"";
+    position:absolute;
+    right:-5px;
+    bottom:-3px;
+    width:27px;
+    height:27px;
+    border-radius:50%;
+    background:var(--green);
+    border:3px solid var(--white);
+    box-shadow:0 3px 0 rgba(34,138,76,.22);
+    animation:stamp-in .34s calc(var(--i) * 145ms + 520ms) cubic-bezier(.2,.9,.3,1.6) both;
+  }
+  .node--done .node-badge .check{
+    position:absolute;
+    right:1px;
+    bottom:3px;
+    width:16px;
+    height:16px;
+    color:var(--white);
+    z-index:2;
+    transform-origin:60% 60%;
+    animation:stamp-in .34s calc(var(--i) * 145ms + 530ms) cubic-bezier(.2,.9,.3,1.6) both;
+  }
+  @keyframes stamp-in{
+    from{transform:scale(.15) rotate(-18deg);opacity:0}
+    55%{opacity:1}
+    to{transform:scale(1) rotate(0);opacity:1}
+  }
+
+  .node--current{
+    --size:clamp(120px, 15.6vh, 158px);
+    --x:61%;
+    --y:35%;
+    --i:4;
+    /* 大圆盘和标签之间留出光环的位置，金色圆环才是一整圈 */
+    gap:24px;
+    /* 当前关是全场唯一主动作，等绿路铺到脚下再落定：砸地压扁 → 回弹 */
+    animation:current-drop .52s 900ms cubic-bezier(.24,.9,.28,1.12) both;
+  }
+  @keyframes current-drop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.62)}
+    55%{opacity:1;transform:translate(-50%,-50%) scale(1.03,.93)}
+    74%{transform:translate(-50%,-50%) scale(.99,1.03)}
+    90%{transform:translate(-50%,-50%) scale(1.005,.995)}
+    100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  }
+  .node--current .node-badge{
+    border-color:var(--white);
+    background:linear-gradient(180deg,#4a93ff 0%,var(--blue) 58%,#2873e9 100%);
+    color:var(--white);
+    box-shadow:
+      0 0 0 9px rgba(255,255,255,.9),
+      0 0 0 16px rgba(255,197,61,.42),
+      0 13px 0 var(--blue-deep),
+      0 28px 40px rgba(18,35,63,.20);
+    animation:current-breathe 3.6s ease-in-out infinite;
+  }
+  .node--current .node-badge .icon{width:calc(var(--size) * .44);height:calc(var(--size) * .44)}
+  /* 砸地那一刻，脚下荡开一圈白尘：和「盖章」是同一套手感 */
+  .node--current .node-badge::before{
+    content:"";
+    position:absolute;
+    inset:-6px;
+    border-radius:50%;
+    border:4px solid rgba(255,255,255,.95);
+    opacity:0;
+    animation:dust-ring .75s 1180ms cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes dust-ring{
+    0%{opacity:.95;transform:scale(.62)}
+    70%{opacity:.3}
+    100%{opacity:0;transform:scale(1.36)}
+  }
+  @keyframes current-breathe{
+    0%,100%{
+      box-shadow:
+        0 0 0 9px rgba(255,255,255,.9),
+        0 0 0 16px rgba(255,197,61,.42),
+        0 13px 0 var(--blue-deep),
+        0 28px 40px rgba(18,35,63,.20);
+    }
+    50%{
+      box-shadow:
+        0 0 0 9px rgba(255,255,255,.94),
+        0 0 0 21px rgba(255,197,61,.30),
+        0 13px 0 var(--blue-deep),
+        0 32px 46px rgba(18,35,63,.22);
+    }
+  }
+  .node--locked{--size:clamp(74px, 8.6vh, 92px);--x:77%;--y:53%;--i:5}
+  .node--locked .node-badge{
+    border-color:#c3d6ec;
+    background:#dbe7f6;
+    color:#7d93b3;
+    box-shadow:0 6px 0 #bacde3, 0 12px 20px rgba(18,35,63,.08);
+  }
+  .node--locked .node-badge::after{
+    content:"";
+    position:absolute;
+    right:-4px;
+    bottom:-2px;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:#a8bdd8;
+    border:3px solid var(--white);
+  }
+  .node--locked .lock-mini{
+    position:absolute;
+    right:2px;
+    bottom:4px;
+    width:15px;
+    height:15px;
+    color:var(--white);
+    z-index:2;
+  }
+
+  .node-label{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    min-height:38px;
+    padding:7px 15px;
+    border-radius:999px;
+    background:rgba(255,255,255,.94);
+    box-shadow:0 4px 0 rgba(18,35,63,.06);
+    font-family:var(--round);
+    font-size:16px;
+    line-height:1.2;
+    font-weight:700;
+    color:var(--ink-2);
+    white-space:nowrap;
+  }
+  /* 当前关的标签就是「开始」按钮：64px 高的金色播放键，形状上不再像一枚徽章 */
+  .node--current .node-label{
+    gap:12px;
+    min-height:64px;
+    padding:0 8px 0 20px;
+    font-size:19px;
+    color:var(--blue-strong);
+    box-shadow:0 6px 0 rgba(18,35,63,.10), 0 16px 26px rgba(18,35,63,.10);
+    margin-bottom:-26px;
+  }
+  .label-play{
+    width:64px;
+    height:64px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:var(--sun);
+    color:var(--ink);
+    box-shadow:0 5px 0 var(--sun-deep);
+  }
+  .label-play .icon{width:24px;height:24px;margin-left:3px}
+  .node--done .node-label{color:var(--ink-2)}
+  .node--locked .node-label{color:#5c7496;background:var(--white);box-shadow:0 4px 0 rgba(18,35,63,.08),0 0 0 2px rgba(255,255,255,.85)}
+
+  /* 未解锁的反馈长在被点的那一关上：节点晃一下，标签就地换成一句短语，2.5 秒复原。
+     不弹条、不开浮层，任何尺寸都不会盖到别的关卡。 */
+  .label-denied{display:none;align-items:center;gap:6px}
+  .label-denied .icon{width:15px;height:15px}
+  .node--locked .node-label{transition:background .16s ease,color .16s ease,box-shadow .16s ease}
+  .node--locked.is-locked-hit .node-label{
+    background:var(--sun);
+    color:#7a4b00;
+    box-shadow:0 4px 0 var(--sun-deep);
+  }
+  .node--locked.is-locked-hit .label-normal{display:none}
+  .node--locked.is-locked-hit .label-denied{display:inline-flex}
+
+  .node.is-locked-hit .node-badge{animation:locked-shake .42s ease}
+  @keyframes locked-shake{
+    0%,100%{transform:translateX(0)}
+    22%{transform:translateX(-6px) rotate(-2deg)}
+    48%{transform:translateX(6px) rotate(2deg)}
+    72%{transform:translateX(-3px)}
+  }
+  .node.is-starting .node-badge{animation:start-pulse .8s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes start-pulse{
+    0%,100%{transform:scale(1)}
+    28%{transform:scale(.94)}
+    62%{transform:scale(1.03)}
+  }
+  .reward.is-bumping .reward-chest{animation:chest-bump .65s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes chest-bump{
+    0%,100%{transform:translateY(0) scale(1)}
+    35%{transform:translateY(-6px) scale(1.06)}
+    70%{transform:translateY(1px) scale(.99)}
+  }
+
+  .flag{
+    position:absolute;
+    left:88%;
+    top:32%;
+    z-index:4;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    opacity:.9;
+    animation:node-pop .5s 1180ms cubic-bezier(.2,.9,.3,1.25) both;
+    --i:6;
+  }
+  .flag-pole{width:5px;height:72px;border-radius:99px;background:#9db4cf}
+  .flag-cloth{
+    position:absolute;
+    left:22px;
+    top:2px;
+    width:43px;
+    height:30px;
+    border-radius:4px 10px 10px 4px;
+    background:var(--sun);
+    box-shadow:0 4px 0 rgba(231,161,0,.35);
+  }
+  .flag-star{
+    position:absolute;
+    left:13px;
+    top:7px;
+    width:17px;
+    height:17px;
+    color:var(--white);
+  }
+  .flag-label{
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink-2);
+    background:rgba(255,255,255,.8);
+    border-radius:999px;
+    padding:4px 9px;
+    white-space:nowrap;
+  }
+
+  /* ---------- trail props（每段路的小场景） ---------- */
+  .prop{
+    position:absolute;
+    left:var(--px);
+    top:var(--py);
+    width:var(--pw,56px);
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+    z-index:1;
+  }
+  .prop--mark{z-index:3}
+  /* 小道具等路面画到附近再淡入，开场不会先飘在半空 */
+  .props{animation:props-in .6s 460ms ease both}
+  @keyframes props-in{from{opacity:0}to{opacity:1}}
+  .prop-paint{--px:21%;--py:31%;--pw:72px}
+  .prop-paws{--px:35%;--py:69%;--pw:58px}
+  .prop-blocks{--px:52%;--py:21%;--pw:58px}
+  .prop-tree{--px:87%;--py:66%;--pw:62px}
+  .prop-bush{--px:6%;--py:80%;--pw:66px}
+  .prop-mushroom{--px:33%;--py:84%;--pw:30px}
+  .prop-flower{--px:58%;--py:79%;--pw:26px}
+  .prop-tuft{--px:93%;--py:73%;--pw:34px}
+
+  /* ---------- 近景（在路的前面擦过画面，制造「有前后」的空间） ---------- */
+  .front{position:absolute;inset:0;z-index:6;pointer-events:none}
+  .fg{position:absolute;transform:translate(-50%,-50%);display:block}
+  .fg-a{left:4%;top:99%;width:108px}
+  .fg-b{left:46%;top:100%;width:70px}
+  .fg-c{left:98%;top:97%;width:126px}
+
+  /* ---------- coach ---------- */
+  /* 教练站在当前关的肩头，而不是悬在两个关卡中间指向空气 */
+  .coach{
+    position:absolute;
+    left:calc(61% + 60px);
+    top:calc(35% - 148px);
+    z-index:6;
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    pointer-events:none;
+    animation:coach-in .55s 1150ms cubic-bezier(.2,.9,.3,1.2) both;
+  }
+  @keyframes coach-in{
+    from{opacity:0;transform:translateY(14px) scale(.9)}
+    to{opacity:1;transform:none}
+  }
+  .coach-star{
+    width:88px;
+    height:88px;
+    flex:0 0 auto;
+    filter:drop-shadow(0 7px 0 rgba(231,161,0,.18));
+    /* 常驻 idle：安静地上下浮，画面不会在孩子等待时变成一张死图 */
+    animation:coach-float 4.6s ease-in-out infinite;
+  }
+  @keyframes coach-float{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-7px)}
+  }
+  .coach.is-nodding .coach-star{animation:nod .7s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes nod{
+    0%,100%{transform:rotate(0) translateY(0)}
+    30%{transform:rotate(-9deg) translateY(-2px)}
+    65%{transform:rotate(4deg) translateY(0)}
+  }
+  /* ---------- reward chip ---------- */
+  .reward{
+    position:absolute;
+    left:clamp(20px,4vw,56px);
+    bottom:26px;
+    z-index:12;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:9px 18px 9px 11px;
+    border-radius:999px;
+    background:rgba(255,255,255,.94);
+    box-shadow:var(--shadow-sm);
+    animation:bar-in .5s 1.15s both;
+  }
+  /* 暂停层里已经有宝箱进度，地图上的胶囊先隐去，别出现两份 */
+  body.pause-open .reward{visibility:hidden}
+  .reward-chest{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:var(--sun);
+    color:#7a4b00;
+    box-shadow:0 4px 0 var(--sun-deep);
+  }
+  .reward-chest .icon{width:25px;height:25px}
+  .reward-copy{display:flex;flex-direction:column;gap:6px}
+  .reward-text{font-family:var(--round);font-size:15px;line-height:1.1;font-weight:700;color:var(--ink)}
+  .reward-track{width:112px;height:7px;border-radius:99px;background:#e3edf9;overflow:hidden}
+  .reward-track span{display:block;height:100%;width:60%;border-radius:99px;background:linear-gradient(90deg,var(--green),#67d28f)}
+
+  /* ---------- unit sheet ---------- */
+  .backdrop{
+    position:fixed;
+    inset:0;
+    z-index:40;
+    background:rgba(18,35,63,.36);
+    opacity:0;
+    transition:opacity .24s ease;
+  }
+  .backdrop.is-open{opacity:1}
+  .sheet{
+    position:fixed;
+    left:50%;
+    bottom:clamp(16px,3vh,32px);
+    z-index:50;
+    width:min(560px,calc(100vw - 32px));
+    padding:26px 30px 30px;
+    border-radius:32px;
+    background:var(--white);
+    box-shadow:0 30px 70px rgba(18,35,63,.28);
+    opacity:0;
+    transform:translate(-50%,calc(100% + 48px));
+    transition:transform .34s cubic-bezier(.18,.9,.24,1.06),opacity .2s ease;
+  }
+  .sheet.is-open{opacity:1;transform:translate(-50%,0)}
+  .sheet:focus,.pause-card:focus{outline:none}
+  .sheet-close{
+    position:absolute;
+    top:16px;
+    right:16px;
+    width:64px;
+    height:64px;
+    display:grid;
+    place-items:center;
+    border:0;
+    border-radius:50%;
+    background:#f2f7fd;
+    color:var(--ink-2);
+    transition:background .16s ease,transform .16s ease;
+  }
+  .sheet-close:hover{background:#e8f2ff;color:var(--ink)}
+  .sheet-close:active{transform:scale(.94)}
+  .sheet-close .icon{width:20px;height:20px}
+
+  .sheet-title{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    padding-right:74px;
+    font-family:var(--round);
+    font-size:31px;
+    line-height:1.2;
+    font-weight:800;
+    letter-spacing:-.01em;
+  }
+  .sheet-title .en{
+    font-family:var(--display);
+    font-size:21px;
+    font-weight:700;
+    color:var(--ink-3);
+    letter-spacing:0;
+  }
+  .sheet-meta{
+    margin-top:8px;
+    font-size:16px;
+    line-height:1.6;
+    color:var(--ink-2);
+  }
+  .sheet-includes{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 18px;
+    margin-top:18px;
+    font-size:16px;
+    line-height:1.4;
+    font-weight:700;
+    color:var(--ink-2);
+  }
+  .sheet-includes span{display:inline-flex;align-items:center;gap:7px}
+  .sheet-includes .icon{width:22px;height:22px;color:var(--blue-strong)}
+
+  .btn{
+    width:100%;
+    min-height:64px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    border:0;
+    border-radius:20px;
+    font-family:var(--round);
+    font-size:20px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:.01em;
+    transition:transform .14s ease,box-shadow .14s ease,background .16s ease;
+  }
+  .btn .icon{width:22px;height:22px}
+  .btn-primary{
+    margin-top:22px;
+    background:var(--blue-strong);
+    color:var(--white);
+    box-shadow:0 7px 0 var(--blue-deep);
+  }
+  .btn-primary:hover{background:#1a5cc7}
+  .btn-primary:active{transform:translateY(5px);box-shadow:0 2px 0 var(--blue-deep)}
+  .btn-quiet{
+    margin-top:10px;
+    background:#f4f8fd;
+    color:var(--ink-2);
+    box-shadow:0 5px 0 #e2ecf8;
+    font-size:18px;
+  }
+  .btn-quiet:hover{background:#eaf2ff;color:var(--ink)}
+  .btn-quiet:active{transform:translateY(3px);box-shadow:0 2px 0 #e2ecf8}
+
+  /* 三端暂停卡给同一组选项：声音开关不能只在手机出现 */
+  .sound-row{
+    display:flex;
+    width:100%;
+    min-height:64px;
+    align-items:center;
+    gap:12px;
+    margin-top:18px;
+    padding:8px 12px;
+    border:0;
+    border-radius:18px;
+    background:#f4f9ff;
+    color:var(--ink);
+    text-align:left;
+  }
+  .sound-row-icon{
+    width:42px;
+    height:42px;
+    flex:0 0 auto;
+    display:grid;
+    place-items:center;
+    border-radius:13px;
+    background:var(--white);
+    color:var(--blue-strong);
+  }
+  .sound-row-icon .icon{width:22px;height:22px}
+  .sound-row-copy{display:flex;flex-direction:column;gap:3px}
+  .sound-row-title{font-size:16px;line-height:1.2;font-weight:700}
+  .sound-row-state{font-size:13px;line-height:1.2;color:var(--ink-2)}
+  .switch{
+    position:relative;
+    width:48px;
+    height:28px;
+    margin-left:auto;
+    flex:0 0 auto;
+    border-radius:999px;
+    background:var(--blue-strong);
+    transition:background .16s ease;
+  }
+  .switch span{
+    position:absolute;
+    top:3px;
+    left:23px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--white);
+    box-shadow:0 1px 3px rgba(18,35,63,.18);
+    transition:left .16s ease;
+  }
+  .sound-row[aria-pressed="false"] .switch{background:#c9d8ea}
+  .sound-row[aria-pressed="false"] .switch span{left:3px}
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:104px;
+    z-index:80;
+    width:max-content;
+    max-width:calc(100vw - 40px);
+    padding:13px 20px;
+    border-radius:15px;
+    background:var(--white);
+    color:var(--ink);
+    font-size:15px;
+    line-height:1.45;
+    font-weight:700;
+    text-align:center;
+    box-shadow:0 6px 0 rgba(18,35,63,.06), 0 18px 32px rgba(18,35,63,.20);
+    opacity:0;
+    transform:translate(-50%,14px);
+    pointer-events:none;
+    transition:opacity .2s ease,transform .24s cubic-bezier(.2,.9,.3,1.1);
+  }
+  .toast.is-visible{opacity:1;transform:translate(-50%,0)}
+
+  /* ---------- pause ---------- */
+  .pause{
+    position:fixed;
+    inset:0;
+    z-index:60;
+    display:grid;
+    place-items:center;
+    padding:24px;
+    background:rgba(18,35,63,.46);
+    animation:fade-in .2s ease both;
+  }
+  @keyframes fade-in{from{opacity:0}to{opacity:1}}
+  .pause-card{
+    width:min(420px,100%);
+    padding:34px 32px 30px;
+    border-radius:32px;
+    background:var(--white);
+    text-align:center;
+    box-shadow:0 30px 70px rgba(18,35,63,.3);
+    animation:card-in .32s cubic-bezier(.2,.9,.3,1.1) both;
+  }
+  @keyframes card-in{
+    from{opacity:0;transform:translateY(16px) scale(.96)}
+    to{opacity:1;transform:none}
+  }
+  .pause-icon{
+    width:88px;
+    height:88px;
+    margin:0 auto 18px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(180deg,#4a93ff 0%,var(--blue) 58%,#2873e9 100%);
+    color:var(--white);
+    box-shadow:
+      0 0 0 8px rgba(255,255,255,.92),
+      0 0 0 14px rgba(255,197,61,.34),
+      0 10px 0 var(--blue-deep),
+      0 22px 32px rgba(18,35,63,.18);
+  }
+  .pause-icon .icon{width:34px;height:34px}
+  .pause-card h2{font-family:var(--round);font-size:29px;line-height:1.25;font-weight:800;letter-spacing:-.01em}
+  .pause-progress{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:22px;
+    padding:13px 18px;
+    border-radius:22px;
+    background:#f4f9ff;
+    text-align:left;
+  }
+  .pause-progress .reward-chest{width:46px;height:46px}
+  .pause-progress .reward-chest .icon{width:26px;height:26px}
+  .pause-progress .reward-copy{gap:7px}
+  .pause-progress .reward-text{font-size:15px}
+  .pause-actions{margin-top:24px}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:900px){
+    :root{--topbar:84px}
+    .topbar{gap:12px;padding:0 20px}
+    .child-name{font-size:17px}
+    .today{padding:9px 14px;gap:8px}
+    .today-label{font-size:14px}
+    .star-count{height:52px;padding:0 13px;font-size:19px}
+    .node--done{--size:clamp(76px,9.4vh,92px)}
+    .node--current{--size:clamp(108px,14vh,138px)}
+    .node--locked{--size:clamp(68px,8.2vh,84px)}
+    .node-label{font-size:15px;min-height:35px}
+    .node--current .node-label{font-size:17px;margin-bottom:-29px}
+    .coach{left:calc(61% + 58px);top:calc(35% - 132px)}
+    .coach-star{width:74px;height:74px}
+    /* 平板宽度下大圆盘变大，123 方块得让开它的光环 */
+    .prop-blocks{--px:44%;--py:14%;--pw:52px}
+    .reward{left:20px;bottom:18px}
+    /* 关卡介绍：面板贴底，地图留在上方压暗可见，孩子不会失去自己在哪一关的上下文 */
+    .sheet{
+      left:0;
+      bottom:0;
+      width:100%;
+      max-height:86dvh;
+      padding:24px 26px calc(24px + env(safe-area-inset-bottom));
+      border-radius:28px 28px 0 0;
+      overflow-y:auto;
+      transform:translateY(100%);
+    }
+    .sheet.is-open{transform:translateY(0)}
+    .sheet-title{font-size:29px;flex-wrap:wrap}
+    .sheet .btn-primary{margin-top:26px}
+  }
+
+  @media (max-width:720px){
+    :root{--topbar:132px;--map-h:calc(100dvh - 196px)}
+    .app{height:100dvh;overflow:hidden}
+    /* 手机顶栏分两行：上排身份与声音/暂停，下排今日五星与星星总数各站一边 */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      display:grid;
+      grid-template-columns:1fr auto;
+      grid-template-rows:64px 48px;
+      align-content:center;
+      align-items:center;
+      column-gap:12px;
+      row-gap:6px;
+      padding:0 14px;
+      background:rgba(242,249,255,.94);
+      backdrop-filter:blur(12px);
+    }
+    .child{grid-area:1 / 1;justify-self:start;padding:2px;margin:-2px}
+    .top-actions{grid-area:1 / 2;justify-self:end;gap:8px}
+    .avatar{width:60px;height:60px;border-width:3px}
+    .child{gap:9px}
+    .child-copy{display:flex}
+    .child-name{font-size:17px}
+    .today{grid-area:2 / 1;justify-self:start;padding:8px 12px;gap:8px}
+    .today-label{font-size:14px}
+    .today-segs{gap:3px}
+    .today-segs i{width:12px;height:9px}
+    .today-count{font-size:19px}
+    .star-count{grid-area:2 / 2;justify-self:end;height:48px;padding:0 14px;font-size:20px;gap:6px}
+    .star-count .icon{width:20px;height:20px}
+    .icon-btn{width:64px;height:64px}
+    /* 手机上一屏看完整条路：剩下的高度全给地图，只有极矮的屏幕才滚动 */
+    .map{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+    .map-canvas{position:relative;inset:auto;flex:1 0 auto;min-height:0}
+    /* 很矮的视口（横屏手机、桌面 200% 缩放）装不下一整条路时退回滚动，宁可多滑一屏也别叠在一起 */
+    @media (max-height:620px){
+      .map-canvas{min-height:600px}
+    }
+    .hills{height:48%}
+    /* 手机上终点旗就在最底下，近景坡会把它整块盖掉，这一层只在平板以上出现 */
+    .hills-front{display:none}
+    .cloud-a{width:104px;left:-18px;top:3%}
+    .cloud-b{width:82px;right:-10px;top:13%}
+    .cloud-c{display:none}
+    .trail-desktop{display:none}
+    .trail-mobile{display:block;inset:0;height:100%}
+    .prop-paint{--px:13%;--py:32%;--pw:60px}
+    .prop-paws{--px:87%;--py:50%;--pw:50px}
+    /* 当前关本身就在说「123」，手机上没有干净的位置再摆一遍，收掉 */
+    .prop-blocks{display:none}
+    .prop-tree{--px:88%;--py:76%;--pw:52px}
+    .prop-bush{--px:8%;--py:80%;--pw:58px}
+    .prop-mushroom{--px:30%;--py:95%;--pw:26px}
+    .prop-flower{--px:68%;--py:95%;--pw:24px}
+    .prop-tuft{--px:88%;--py:91%;--pw:30px}
+    .fg-a{left:5%;top:98%;width:66px}
+    .fg-b{display:none}
+    .fg-c{left:95%;top:97.5%;width:78px}
+    /* 坐标跟着手机版路面的实际走线，尺寸跟着地图实际高度走：
+       节点落在路上，矮屏按比例收，不让大圆盘压住上一关 */
+    .node--done{--size:clamp(64px, calc(var(--map-h) * .115), 76px)}
+    .node--done:nth-of-type(1){--x:50%;--y:7%}
+    .node--done:nth-of-type(2){--x:26%;--y:22%}
+    .node--done:nth-of-type(3){--x:71%;--y:37%}
+    .node--current{--size:clamp(88px, calc(var(--map-h) * .173), 112px);--x:32%;--y:53%}
+    .node--locked{--size:clamp(64px, calc(var(--map-h) * .109), 70px);--x:69%;--y:66%}
+    .flag{left:50%;top:90%;transform:translate(-50%,-50%) scale(.86)}
+    /* 教练和节点一起按地图实际高度收，矮屏上不会飘回两个关卡中间 */
+    .coach{
+      --cs:clamp(40px, calc(var(--map-h) * .08), 52px);
+      left:calc(32% + var(--map-h) * .125 - var(--cs) / 2);
+      top:calc(53% - var(--map-h) * .125 - var(--cs) / 2);
+    }
+    .coach-star{width:var(--cs);height:var(--cs)}
+    /* 手机上奖励进度铺成一条底栏，不再压住路面和「我的家」标签 */
+    .reward{
+      position:sticky;
+      left:auto;
+      right:auto;
+      bottom:0;
+      z-index:30;
+      justify-content:flex-start;
+      padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+      border-radius:0;
+      background:rgba(255,255,255,.97);
+      box-shadow:0 -8px 22px rgba(18,35,63,.10);
+    }
+    .node-label{font-size:clamp(13px, calc(var(--map-h) * .0232), 15px)}
+    .node--current .node-label{font-size:clamp(15px, calc(var(--map-h) * .0262), 17px)}
+    /* 提示挪到顶栏正下方一行，短文案不再拆行、也不挡当前关 */
+    .toast{
+      top:calc(var(--topbar) + 8px);
+      bottom:auto;
+      width:max-content;
+      max-width:calc(100vw - 28px);
+      transform:translate(-50%,-10px);
+    }
+    .sheet{padding:20px 20px calc(22px + env(safe-area-inset-bottom))}
+    .sheet-title{font-size:26px}
+    .sheet-includes{gap:8px 16px;font-size:15px}
+    .btn{font-size:19px}
+  }
+
+  @media (max-width:370px){
+    .topbar{padding:0 10px;gap:6px}
+    .today{padding:7px 10px}
+    .star-count{padding:0 11px;font-size:18px}
+    .avatar{width:56px;height:56px}
+  }
+
+  @media (max-width:380px){
+    .sheet-includes{display:grid;gap:6px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.001ms !important;
+      scroll-behavior:auto !important;
+    }
+    .node--current .node-badge{animation:none}
+    .coach-star{animation:none}
+  }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9L12 2.6z" fill="currentColor"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10.5" rx="3" fill="currentColor"/><path d="M8 10V7.8a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M3.5 9.2h3.8l5-4.1v13.8l-5-4.1H3.5z" fill="currentColor"/><path d="M15.6 8.4a5 5 0 0 1 0 7.2M18.2 5.8a8.8 8.8 0 0 1 0 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M3.5 9.2h3.8l5-4.1v13.8l-5-4.1H3.5z" fill="currentColor"/><path d="M16 9l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4.2" height="16" rx="2" fill="currentColor"/><rect x="13.8" y="4" width="4.2" height="16" rx="2" fill="currentColor"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z" fill="currentColor"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4.5 5.5h15a2 2 0 0 1 2 2v7.2a2 2 0 0 1-2 2H10l-5.5 3.8v-3.8h-.1a2 2 0 0 1-1.9-2V7.5a2 2 0 0 1 2-2z" fill="currentColor"/><circle cx="8.5" cy="11.3" r="1.3" fill="#fff"/><circle cx="12.5" cy="11.3" r="1.3" fill="#fff"/><circle cx="16.5" cy="11.3" r="1.3" fill="#fff"/></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.4c3.9 5 6.3 8.2 6.3 11.3a6.3 6.3 0 1 1-12.6 0c0-3.1 2.4-6.3 6.3-11.3z" fill="currentColor"/></symbol>
+    <symbol id="i-paw" viewBox="0 0 24 24"><ellipse cx="12" cy="15.4" rx="5.2" ry="4.4" fill="currentColor"/><circle cx="5.9" cy="10.5" r="2.2" fill="currentColor"/><circle cx="9.8" cy="7.6" r="2.2" fill="currentColor"/><circle cx="14.2" cy="7.6" r="2.2" fill="currentColor"/><circle cx="18.1" cy="10.5" r="2.2" fill="currentColor"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="15" r="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-house" viewBox="0 0 24 24"><path d="M3 11.2l9-7.1 9 7.1v8.1a1.7 1.7 0 0 1-1.7 1.7H4.7A1.7 1.7 0 0 1 3 19.3z" fill="currentColor"/><path d="M9.7 21v-6.1h4.6V21" fill="#fff"/></symbol>
+    <symbol id="i-chest" viewBox="0 0 24 24"><path d="M3 10.8V9.6A6 6 0 0 1 9 3.6h6a6 6 0 0 1 6 6v1.2z" fill="currentColor"/><rect x="3" y="10.8" width="18" height="9.2" rx="2.6" fill="currentColor"/><rect x="3" y="10.4" width="18" height="2" fill="#fff" opacity=".85"/><rect x="10.4" y="12.4" width="3.2" height="5" rx="1.4" fill="#fff"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="8.8" y="3.2" width="6.4" height="10.4" rx="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M5.9 11.6a6.1 6.1 0 0 0 12.2 0M12 17.7V21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-ear" viewBox="0 0 24 24"><path d="M6.5 10.2a5.5 5.5 0 1 1 9.9 3.2c-1.4 2-3.1 3-3.1 5.1a2.1 2.1 0 0 1-4.2 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M10 10.2a2 2 0 1 1 3.3 1.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M10 3.5a2.2 2.2 0 0 1 4.4 0v1.2h3.4a1.6 1.6 0 0 1 1.6 1.6v3.4h1.2a2.2 2.2 0 0 1 0 4.4h-1.2v3.4a1.6 1.6 0 0 1-1.6 1.6h-3.6v-1.2a2.2 2.2 0 0 0-4.4 0v1.2H6.2a1.6 1.6 0 0 1-1.6-1.6v-3.6h1.2a2.2 2.2 0 0 0 0-4.4H4.6V6.3a1.6 1.6 0 0 1 1.6-1.6H10z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-123" viewBox="0 0 24 24"><rect x="2.6" y="4.6" width="18.8" height="14.8" rx="4.6" fill="currentColor"/><text x="12" y="16.5" text-anchor="middle" font-family="'Baloo 2','Noto Sans SC',sans-serif" font-size="10.4" font-weight="800" fill="#1f66db">123</text></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.6 15.4A8.7 8.7 0 0 1 8.6 3.4 8.9 8.9 0 1 0 20.6 15.4z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="topbar">
+    <button class="child" type="button" id="childBtn" aria-label="Mia 的小档案">
+      <span class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 54 54">
+          <rect width="54" height="54" fill="#FFE0B6"/>
+          <circle cx="27" cy="31" r="13.5" fill="#F7C99B"/>
+          <path d="M12.5 27c1-10.5 7.6-16 14.5-16s13.5 5.5 14.5 16c-4.3-3.4-8.8-5-14.5-5s-10.2 1.6-14.5 5z" fill="#6B4A2F"/>
+          <circle cx="22" cy="31" r="1.9" fill="#12233F"/>
+          <circle cx="32" cy="31" r="1.9" fill="#12233F"/>
+          <path d="M23 37.2c2.6 2.4 5.4 2.4 8 0" stroke="#B4552D" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+          <circle cx="18.2" cy="35.5" r="2.4" fill="#F3A98D" opacity=".55"/>
+          <circle cx="35.8" cy="35.5" r="2.4" fill="#F3A98D" opacity=".55"/>
+        </svg>
+      </span>
+      <span class="child-copy">
+        <span class="child-name">Mia</span>
+      </span>
+    </button>
+
+    <div class="today" aria-label="今日已完成 3 关，共 5 关">
+      <span class="today-label">今日</span>
+      <span class="today-segs" aria-hidden="true">
+        <i class="is-on"></i><i class="is-on"></i><i class="is-on"></i><i></i><i></i>
+      </span>
+      <span class="today-count">3/5</span>
+    </div>
+
+    <div class="star-count" aria-label="128 颗星星">
+      <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>
+      <span>128</span>
+    </div>
+
+    <div class="top-actions">
+      <button class="icon-btn sound" type="button" id="soundBtn" aria-pressed="true" aria-label="关闭声音">
+        <svg class="icon" aria-hidden="true" id="soundIcon"><use href="#i-sound"/></svg>
+      </button>
+      <button class="icon-btn" type="button" id="pauseBtn" aria-label="暂停学习">
+        <svg class="icon" aria-hidden="true"><use href="#i-pause"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="map">
+    <div class="map-canvas">
+      <h1 class="sr-only">Mia 的学习地图</h1>
+
+      <svg class="cloud cloud-a" viewBox="0 0 180 70" aria-hidden="true">
+        <path d="M22 58c-12 0-20-8-20-18s9-18 20-18c4-13 16-20 29-17 11-11 29-8 36 5 15-3 29 7 29 20 9 2 16 10 16 19 0 10-10 19-22 19z" fill="currentColor"/>
+      </svg>
+      <svg class="cloud cloud-b" viewBox="0 0 180 70" aria-hidden="true">
+        <path d="M22 58c-12 0-20-8-20-18s9-18 20-18c4-13 16-20 29-17 11-11 29-8 36 5 15-3 29 7 29 20 9 2 16 10 16 19 0 10-10 19-22 19z" fill="currentColor"/>
+      </svg>
+      <svg class="cloud cloud-c" viewBox="0 0 180 70" aria-hidden="true">
+        <path d="M22 58c-12 0-20-8-20-18s9-18 20-18c4-13 16-20 29-17 11-11 29-8 36 5 15-3 29 7 29 20 9 2 16 10 16 19 0 10-10 19-22 19z" fill="currentColor"/>
+      </svg>
+
+      <svg class="hills" viewBox="0 0 1440 520" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 250C200 180 360 300 560 250S920 140 1120 230s200 70 320 -10v300H0z" fill="#D8EFD3"/>
+        <path d="M0 340c220-60 400 40 620-10s360-80 580 0 200 50 240 -10v200H0z" fill="#C4E7C2"/>
+        <path d="M0 430c240-70 460 30 720-20s400-60 720 20v90H0z" fill="#AFDDAE"/>
+        <g fill="#ffffff" opacity=".85">
+          <circle cx="190" cy="452" r="5"/><circle cx="206" cy="462" r="3.4"/>
+          <circle cx="1210" cy="438" r="4.6"/><circle cx="1226" cy="448" r="3.2"/>
+          <circle cx="690" cy="486" r="4.2"/><circle cx="706" cy="494" r="3"/>
+        </g>
+        <g fill="#F9D96A" opacity=".9">
+          <circle cx="320" cy="470" r="4.4"/><circle cx="1080" cy="480" r="4"/>
+        </g>
+      </svg>
+
+      <svg class="trail trail-desktop" viewBox="0 0 1440 760" preserveAspectRatio="none" aria-hidden="true">
+        <path class="trail-base" pathLength="100" d="M202 477C252 478 332 364 418 310C522 268 582 380 648 431C722 481 810 340 878 264C950 192 1040 350 1109 401C1174 449 1226 300 1267 249"/>
+        <path class="trail-done-fill" pathLength="100" d="M202 477C252 478 332 364 418 310C522 268 582 380 648 431C722 481 810 340 878 264"/>
+        <path class="trail-future-fill" pathLength="100" d="M878 264C950 192 1040 350 1109 401C1174 449 1226 300 1267 249"/>
+        <path class="trail-dash" d="M202 477C252 478 332 364 418 310C522 268 582 380 648 431C722 481 810 340 878 264C950 192 1040 350 1109 401C1174 449 1226 300 1267 249"/>
+      </svg>
+
+      <svg class="trail trail-mobile" viewBox="0 0 390 700" preserveAspectRatio="none" aria-hidden="true">
+        <path class="trail-base" pathLength="100" d="M195 49C150 75 92 105 101 154C110 200 240 212 277 259C312 302 172 322 125 371C82 415 236 424 269 462C296 505 232 590 195 630"/>
+        <path class="trail-done-fill" pathLength="100" d="M195 49C150 75 92 105 101 154C110 200 240 212 277 259C312 302 172 322 125 371"/>
+        <path class="trail-future-fill" pathLength="100" d="M125 371C82 415 236 424 269 462C296 505 232 590 195 630"/>
+        <path class="trail-dash" d="M195 49C150 75 92 105 101 154C110 200 240 212 277 259C312 302 172 322 125 371C82 415 236 424 269 462C296 505 232 590 195 630"/>
+      </svg>
+
+      <button class="node node--done" type="button" data-unit="1" aria-label="第 1 关，问候，已完成">
+        <span class="node-badge">
+          <svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>
+          <svg class="check" aria-hidden="true"><use href="#i-check"/></svg>
+        </span>
+        <span class="node-label">问候</span>
+      </button>
+
+      <button class="node node--done" type="button" data-unit="2" aria-label="第 2 关，颜色，已完成">
+        <span class="node-badge">
+          <svg class="icon" aria-hidden="true"><use href="#i-drop"/></svg>
+          <svg class="check" aria-hidden="true"><use href="#i-check"/></svg>
+        </span>
+        <span class="node-label">颜色</span>
+      </button>
+
+      <button class="node node--done" type="button" data-unit="3" aria-label="第 3 关，动物，已完成">
+        <span class="node-badge">
+          <svg class="icon" aria-hidden="true"><use href="#i-paw"/></svg>
+          <svg class="check" aria-hidden="true"><use href="#i-check"/></svg>
+        </span>
+        <span class="node-label">动物</span>
+      </button>
+
+      <button class="node node--current" type="button" data-unit="4" aria-label="第 4 关，数字，继续学习">
+        <span class="node-badge">
+          <svg class="icon" aria-hidden="true"><use href="#i-123"/></svg>
+        </span>
+        <span class="node-label">
+          数字
+          <span class="label-play" aria-hidden="true">
+            <svg class="icon"><use href="#i-play"/></svg>
+          </span>
+        </span>
+      </button>
+
+      <button class="node node--locked" type="button" data-unit="5" aria-label="第 5 关，我的家，未解锁">
+        <span class="node-badge">
+          <svg class="icon" aria-hidden="true"><use href="#i-house"/></svg>
+          <svg class="lock-mini" aria-hidden="true"><use href="#i-lock"/></svg>
+        </span>
+        <span class="node-label">
+          <span class="label-normal">我的家</span>
+          <span class="label-denied" aria-hidden="true">
+            <svg class="icon"><use href="#i-lock"/></svg>
+            先过第 4 关
+          </span>
+        </span>
+      </button>
+
+      <div class="flag" aria-hidden="true">
+        <span class="flag-cloth">
+          <svg class="flag-star" viewBox="0 0 24 24"><use href="#i-star"/></svg>
+        </span>
+        <span class="flag-pole"></span>
+        <span class="flag-label">终点</span>
+      </div>
+
+      <div class="props" aria-hidden="true">
+        <svg class="prop prop--mark prop-paint" viewBox="0 0 72 30">
+          <circle cx="14" cy="15" r="11" fill="#FF9A9A"/>
+          <circle cx="36" cy="15" r="11" fill="#6FB9FF"/>
+          <circle cx="58" cy="15" r="11" fill="#FFD75E"/>
+        </svg>
+        <svg class="prop prop--mark prop-paws" viewBox="0 0 58 40">
+          <g fill="#7FC49B" opacity=".9">
+            <g transform="translate(2,2) scale(.88)"><ellipse cx="12" cy="19" rx="6" ry="5"/><circle cx="5.5" cy="12" r="2.6"/><circle cx="10" cy="9" r="2.6"/><circle cx="15" cy="9" r="2.6"/><circle cx="19.5" cy="12" r="2.6"/></g>
+            <g transform="translate(28,12) scale(.88)"><ellipse cx="12" cy="19" rx="6" ry="5"/><circle cx="5.5" cy="12" r="2.6"/><circle cx="10" cy="9" r="2.6"/><circle cx="15" cy="9" r="2.6"/><circle cx="19.5" cy="12" r="2.6"/></g>
+          </g>
+        </svg>
+        <svg class="prop prop--mark prop-blocks" viewBox="0 0 78 34">
+          <rect x="1" y="4" width="24" height="26" rx="7" fill="#FFD75E"/><text x="13" y="23" text-anchor="middle" font-family="'Baloo 2',sans-serif" font-size="16" font-weight="800" fill="#8A5B00">1</text>
+          <rect x="27" y="4" width="24" height="26" rx="7" fill="#9FD8FF"/><text x="39" y="23" text-anchor="middle" font-family="'Baloo 2',sans-serif" font-size="16" font-weight="800" fill="#14538F">2</text>
+          <rect x="53" y="4" width="24" height="26" rx="7" fill="#FFB4A8"/><text x="65" y="23" text-anchor="middle" font-family="'Baloo 2',sans-serif" font-size="16" font-weight="800" fill="#8C3A2C">3</text>
+        </svg>
+        <svg class="prop prop--mark prop-tree" viewBox="0 0 64 66">
+          <rect x="28" y="38" width="6" height="24" rx="3" fill="#B98A5C"/>
+          <circle cx="31" cy="28" r="17" fill="#8FD3A2"/>
+          <circle cx="17" cy="37" r="11" fill="#A6DEB5"/>
+          <circle cx="45" cy="37" r="11" fill="#A6DEB5"/>
+        </svg>
+        <svg class="prop prop-bush" viewBox="0 0 66 34">
+          <ellipse cx="18" cy="24" rx="16" ry="10" fill="#A9DCA9"/>
+          <ellipse cx="38" cy="21" rx="20" ry="13" fill="#B7E3B4"/>
+          <ellipse cx="54" cy="26" rx="11" ry="8" fill="#A9DCA9"/>
+        </svg>
+        <svg class="prop prop-mushroom" viewBox="0 0 30 32">
+          <rect x="12" y="16" width="6" height="13" rx="3" fill="#FFF0DA"/>
+          <path d="M2 17a13 13 0 0 1 26 0z" fill="#F4A28C"/>
+          <circle cx="10" cy="12" r="2.2" fill="#FFE7DF"/>
+          <circle cx="19" cy="10" r="2" fill="#FFE7DF"/>
+        </svg>
+        <svg class="prop prop-flower" viewBox="0 0 26 32">
+          <rect x="11.5" y="16" width="3" height="14" rx="1.5" fill="#7FBF86"/>
+          <circle cx="13" cy="11" r="5" fill="#FFD75E"/>
+          <circle cx="6" cy="11" r="4" fill="#FFF0B8"/>
+          <circle cx="20" cy="11" r="4" fill="#FFF0B8"/>
+          <circle cx="13" cy="18" r="4" fill="#FFF0B8"/>
+          <circle cx="13" cy="4" r="4" fill="#FFF0B8"/>
+        </svg>
+        <svg class="prop prop-tuft" viewBox="0 0 34 26">
+          <path d="M6 24c2-8 5-11 7-12-1 5-1 8 0 12zM15 24c1-9 4-13 6-14-1 6-1 10 0 14zM24 24c2-6 4-9 6-10-2 4-2 7-1 10z" fill="#8FCF95"/>
+        </svg>
+      </div>
+
+      <svg class="hills-front" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 44c170-26 300 16 520 4s330-34 520-10 250 26 400 8v74H0z" fill="#8FC98F"/>
+        <g fill="#7EBC7F" opacity=".55">
+          <circle cx="150" cy="86" r="3.4"/><circle cx="640" cy="96" r="3"/>
+          <circle cx="1100" cy="80" r="3.2"/>
+        </g>
+      </svg>
+
+      <div class="front" aria-hidden="true">
+        <svg class="fg fg-a" viewBox="0 0 56 40">
+          <path d="M8 40C9 26 11 16 14 9C17 18 19 28 20 40Z" fill="#7FC086"/>
+          <path d="M22 40C23 22 26 12 30 3C33 14 34 26 35 40Z" fill="#8FCB92"/>
+          <path d="M37 40C38 29 41 21 45 15C47 23 48 31 48 40Z" fill="#7FC086"/>
+        </svg>
+        <svg class="fg fg-b" viewBox="0 0 56 40">
+          <path d="M10 40C11 28 13 19 16 12C19 21 20 30 21 40Z" fill="#8FCB92"/>
+          <path d="M24 40C25 24 28 14 32 6C35 16 36 27 37 40Z" fill="#7FC086"/>
+        </svg>
+        <svg class="fg fg-c" viewBox="0 0 56 40">
+          <path d="M6 40C7 27 9 17 13 10C16 19 18 29 19 40Z" fill="#7FC086"/>
+          <path d="M21 40C22 23 25 13 29 4C32 15 33 27 34 40Z" fill="#8FCB92"/>
+          <path d="M36 40C37 30 40 22 44 16C46 24 47 32 47 40Z" fill="#7FC086"/>
+        </svg>
+      </div>
+
+      <div class="coach" aria-hidden="true">
+        <svg class="coach-star" viewBox="0 0 100 100">
+          <path d="M50 7l12.2 24.8 27.3 4-19.8 19.2 4.7 27.2L50 69.4 25.6 82.2l4.7-27.2-19.8-19.2 27.3-4z" fill="#FFC53D" stroke="#E7A100" stroke-width="4.5" stroke-linejoin="round"/>
+          <circle cx="41.5" cy="42.5" r="3.6" fill="#12233F"/>
+          <circle cx="58.5" cy="42.5" r="3.6" fill="#12233F"/>
+          <path d="M42.5 53c4.6 4.2 10.4 4.2 15 0" fill="none" stroke="#12233F" stroke-width="3.4" stroke-linecap="round"/>
+          <circle cx="33.5" cy="50.5" r="3.2" fill="#F29C7A" opacity=".7"/>
+          <circle cx="66.5" cy="50.5" r="3.2" fill="#F29C7A" opacity=".7"/>
+        </svg>
+      </div>
+
+    </div>
+
+    <div class="reward" aria-label="再完成 2 关，打开今日宝箱">
+      <span class="reward-chest" aria-hidden="true">
+        <svg class="icon"><use href="#i-chest"/></svg>
+      </span>
+      <span class="reward-copy">
+        <span class="reward-text">再 2 关开宝箱</span>
+        <span class="reward-track" aria-hidden="true"><span></span></span>
+      </span>
+    </div>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop" hidden></div>
+
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1" hidden>
+  <button class="sheet-close" type="button" id="sheetClose" aria-label="关闭关卡介绍">
+    <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+  </button>
+
+  <h2 class="sheet-title" id="sheetTitle">数字 <span class="en" id="sheetEn">Numbers</span></h2>
+  <p class="sheet-meta" id="sheetMeta">8 个单词 · 约 5 分钟</p>
+
+  <div class="sheet-includes" aria-label="这一关的内容">
+    <span>
+      <svg class="icon" aria-hidden="true"><use href="#i-ear"/></svg>
+      听音选图
+    </span>
+    <span>
+      <svg class="icon" aria-hidden="true"><use href="#i-mic"/></svg>
+      跟读单词
+    </span>
+    <span>
+      <svg class="icon" aria-hidden="true"><use href="#i-puzzle"/></svg>
+      小游戏
+    </span>
+  </div>
+
+  <button class="btn btn-primary" type="button" id="startBtn">
+    <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+    <span id="startLabel">开始第 4 关</span>
+  </button>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="pause" id="pause" hidden>
+  <div class="pause-card" role="dialog" aria-modal="true" aria-labelledby="pauseTitle" tabindex="-1">
+    <div class="pause-icon" aria-hidden="true">
+      <svg class="icon"><use href="#i-pause"/></svg>
+    </div>
+    <h2 id="pauseTitle">休息一下</h2>
+    <div class="pause-progress" aria-hidden="true">
+      <span class="reward-chest">
+        <svg class="icon"><use href="#i-chest"/></svg>
+      </span>
+      <span class="reward-copy">
+        <span class="reward-text">再 2 关开宝箱</span>
+        <span class="reward-track"><span></span></span>
+      </span>
+    </div>
+    <button class="sound-row" type="button" id="pauseSoundBtn" aria-pressed="true">
+      <span class="sound-row-icon" aria-hidden="true">
+        <svg class="icon" id="pauseSoundIcon"><use href="#i-sound"/></svg>
+      </span>
+      <span class="sound-row-copy">
+        <span class="sound-row-title">声音</span>
+        <span class="sound-row-state" id="pauseSoundState">已打开</span>
+      </span>
+      <span class="switch" aria-hidden="true"><span></span></span>
+    </button>
+    <div class="pause-actions">
+      <button class="btn btn-primary" type="button" id="resumeBtn">继续学习</button>
+      <button class="btn btn-quiet" type="button" id="leaveBtn">
+        <svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg>
+        <span>今天先到这里</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const units = {
+    1: {name:'问候', en:'Hello', meta:'6 个单词 · 已完成', button:'再练一次', locked:false, icon:'#i-chat'},
+    2: {name:'颜色', en:'Colors', meta:'7 个单词 · 已完成', button:'再练一次', locked:false, icon:'#i-drop'},
+    3: {name:'动物', en:'Animals', meta:'9 个单词 · 已完成', button:'再练一次', locked:false, icon:'#i-paw'},
+    4: {name:'数字', en:'Numbers', meta:'8 个单词 · 约 5 分钟', button:'开始第 4 关', locked:false, icon:'#i-123'},
+    5: {name:'我的家', en:'My Family', meta:'8 个单词 · 未解锁', button:'尚未解锁', locked:true, icon:'#i-house'}
+  };
+
+  const backdrop = document.getElementById('backdrop');
+  const sheet = document.getElementById('sheet');
+  const sheetClose = document.getElementById('sheetClose');
+  const sheetTitle = document.getElementById('sheetTitle');
+  const sheetEn = document.getElementById('sheetEn');
+  const sheetMeta = document.getElementById('sheetMeta');
+  const startBtn = document.getElementById('startBtn');
+  const startLabel = document.getElementById('startLabel');
+  const toast = document.getElementById('toast');
+  const pause = document.getElementById('pause');
+  const pauseCard = pause.querySelector('.pause-card');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
+  const leaveBtn = document.getElementById('leaveBtn');
+  const soundBtn = document.getElementById('soundBtn');
+  const soundIcon = document.getElementById('soundIcon').querySelector('use');
+  const childBtn = document.getElementById('childBtn');
+  const coach = document.querySelector('.coach');
+  const reward = document.querySelector('.reward');
+  const pauseSoundBtn = document.getElementById('pauseSoundBtn');
+  const pauseSoundState = document.getElementById('pauseSoundState');
+  const pauseSoundIcon = document.getElementById('pauseSoundIcon').querySelector('use');
+
+  let activeUnit = 4;
+  let lastFocus = null;
+  let lastPauseFocus = null;
+  let toastTimer = 0;
+  let startingTimer = 0;
+  let lockTimer = 0;
+  let holdLockNote = false;   // ?state=locked 只用于截图：把「刚点了一下」的那一帧停住
+  let soundOn = true;
+
+  function setSound(on, announce){
+    soundOn = on;
+    soundBtn.setAttribute('aria-pressed', String(soundOn));
+    soundBtn.setAttribute('aria-label', soundOn ? '关闭声音' : '打开声音');
+    soundIcon.setAttribute('href', soundOn ? '#i-sound' : '#i-mute');
+    pauseSoundBtn.setAttribute('aria-pressed', String(soundOn));
+    pauseSoundState.textContent = soundOn ? '已打开' : '已关闭';
+    pauseSoundIcon.setAttribute('href', soundOn ? '#i-sound' : '#i-mute');
+    if (announce) {
+      showToast(soundOn ? '声音已打开' : '声音已关闭');
+    }
+  }
+
+  function showToast(message){
+    toast.textContent = message;
+    toast.classList.add('is-visible');
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(function(){
+      toast.classList.remove('is-visible');
+    }, 2300);
+  }
+
+  // 只读给读屏，不弹条：未解锁的提示画在关卡自己身上
+  function announce(message){
+    toast.textContent = message;
+  }
+
+  function setSheetContent(id){
+    const unit = units[id];
+    activeUnit = id;
+    sheetTitle.firstChild.nodeValue = unit.name + ' ';
+    sheetEn.textContent = unit.en;
+    sheetMeta.textContent = unit.meta;
+    startLabel.textContent = unit.button;
+    startBtn.disabled = unit.locked;
+    startBtn.setAttribute('aria-disabled', String(unit.locked));
+  }
+
+  function openSheet(id){
+    const unit = units[id];
+    if (!unit || unit.locked) return;
+    setSheetContent(id);
+    lastFocus = document.activeElement;
+    backdrop.hidden = false;
+    sheet.hidden = false;
+    document.body.classList.add('sheet-open');
+    void sheet.offsetWidth;
+    window.requestAnimationFrame(function(){
+      backdrop.classList.add('is-open');
+      sheet.classList.add('is-open');
+    });
+    window.setTimeout(function(){
+      sheet.focus({preventScroll:true});
+    }, 340);
+  }
+
+  function closeSheet(){
+    if (sheet.hidden) return;
+    backdrop.classList.remove('is-open');
+    sheet.classList.remove('is-open');
+    document.body.classList.remove('sheet-open');
+    window.setTimeout(function(){
+      backdrop.hidden = true;
+      sheet.hidden = true;
+    }, 280);
+    if (lastFocus && typeof lastFocus.focus === 'function') {
+      window.setTimeout(function(){
+        lastFocus.focus({preventScroll:true});
+      }, 300);
+    }
+  }
+
+  function openPause(){
+    if (!pause.hidden) return;
+    lastPauseFocus = document.activeElement;
+    pause.hidden = false;
+    document.body.classList.add('pause-open');
+    window.setTimeout(function(){ pauseCard.focus({preventScroll:true}); }, 60);
+  }
+
+  function closePause(){
+    if (pause.hidden) return;
+    pause.hidden = true;
+    document.body.classList.remove('pause-open');
+    if (lastPauseFocus && typeof lastPauseFocus.focus === 'function') {
+      lastPauseFocus.focus({preventScroll:true});
+    }
+  }
+
+  document.querySelectorAll('.node').forEach(function(node){
+    node.addEventListener('click', function(){
+      const id = Number(node.dataset.unit);
+      const unit = units[id];
+      if (!unit) return;
+      if (unit.locked) {
+        announce('先过第 4 关，才能解锁这一关');
+        node.classList.remove('is-locked-hit');
+        void node.offsetWidth;
+        node.classList.add('is-locked-hit');
+        window.clearTimeout(lockTimer);
+        if (!holdLockNote) {
+          lockTimer = window.setTimeout(function(){ node.classList.remove('is-locked-hit'); }, 2600);
+        }
+        return;
+      }
+      openSheet(id);
+    });
+  });
+
+  sheetClose.addEventListener('click', closeSheet);
+  backdrop.addEventListener('click', closeSheet);
+
+  startBtn.addEventListener('click', function(){
+    const unit = units[activeUnit];
+    const node = document.querySelector('.node[data-unit="' + activeUnit + '"]');
+    closeSheet();
+    if (node) {
+      node.classList.add('is-starting');
+      window.clearTimeout(startingTimer);
+      startingTimer = window.setTimeout(function(){
+        node.classList.remove('is-starting');
+      }, 1100);
+    }
+    if (coach) {
+      coach.classList.add('is-nodding');
+      window.setTimeout(function(){ coach.classList.remove('is-nodding'); }, 800);
+    }
+    if (reward) {
+      reward.classList.add('is-bumping');
+      window.setTimeout(function(){ reward.classList.remove('is-bumping'); }, 720);
+    }
+    showToast('第 ' + activeUnit + ' 关 · ' + unit.name + '，准备出发');
+  });
+
+  pauseBtn.addEventListener('click', openPause);
+  resumeBtn.addEventListener('click', closePause);
+  leaveBtn.addEventListener('click', closePause);
+
+  soundBtn.addEventListener('click', function(){
+    setSound(!soundOn, true);
+  });
+  pauseSoundBtn.addEventListener('click', function(){
+    setSound(!soundOn, false);
+  });
+
+  childBtn.addEventListener('click', function(){
+    showToast('Mia · 128 颗星星');
+  });
+
+  document.addEventListener('keydown', function(event){
+    if (event.key === 'Escape') {
+      if (!pause.hidden) { closePause(); return; }
+      if (!sheet.hidden) { closeSheet(); return; }
+    }
+    if (event.key === 'Tab' && !sheet.hidden) {
+      const focusables = [sheetClose, startBtn].filter(function(el){ return el.offsetParent !== null; });
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (document.activeElement === sheet) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    if (event.key === 'Tab' && !pause.hidden) {
+      // 声音开关在桌面是隐藏的，焦点顺序得按当前真正可见的控件算
+      const focusables = [pauseSoundBtn, resumeBtn, leaveBtn].filter(function(el){ return el.offsetParent !== null; });
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (document.activeElement === pauseCard) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  const state = new URLSearchParams(window.location.search).get('state');
+  if (state === 'sheet' || state === 'intro') {
+    window.setTimeout(function(){ openSheet(4); }, 380);
+  }
+  if (state === 'pause') {
+    window.setTimeout(openPause, 380);
+  }
+  if (state === 'locked') {
+    holdLockNote = true;
+    window.setTimeout(function(){
+      const node = document.querySelector('.node[data-unit="5"]');
+      if (node) node.click();
+    }, 520);
+  }
+})();
+</script>
+
+
+
+</body>
+</html>
