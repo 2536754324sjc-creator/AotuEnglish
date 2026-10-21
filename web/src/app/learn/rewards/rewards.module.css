@@ -1,0 +1,440 @@
+.page {
+  flex: 1 1 auto;
+  min-height: 100dvh;
+  padding: clamp(16px, 3vh, 32px) clamp(16px, 4vw, 48px) 24px;
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 100%);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.back {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink-2);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.back svg {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.starTotal {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.starTotal svg {
+  width: 20px;
+  height: 20px;
+  color: var(--sun);
+}
+
+.main {
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 4vh, 40px);
+}
+
+/* 宝箱 */
+.chestCard {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 26px 28px;
+  border-radius: var(--r-lg);
+  background: #fff;
+  box-shadow: 0 12px 0 rgba(18, 35, 63, 0.05), 0 22px 40px rgba(18, 35, 63, 0.1);
+}
+
+.claimable {
+  background: linear-gradient(135deg, #fff9e9, #fff);
+  border: 2px solid #ffe1a8;
+}
+
+.chest {
+  width: 104px;
+  height: 104px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 28px;
+  background: #f4f8fd;
+  color: #9bb0cb;
+  cursor: default;
+  transition: transform 0.16s ease;
+}
+
+.chest svg {
+  width: 52px;
+  height: 52px;
+}
+
+.chest:disabled {
+  cursor: default;
+}
+
+.chestReady {
+  background: var(--sun);
+  color: #7a4b00;
+  box-shadow: 0 8px 0 var(--sun-deep);
+  cursor: pointer;
+  animation: chestBob 1.6s ease-in-out infinite;
+}
+
+.chestReady:active {
+  transform: translateY(5px);
+  box-shadow: 0 3px 0 var(--sun-deep);
+}
+
+@keyframes chestBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.chestPop {
+  animation: chestPop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+@keyframes chestPop {
+  0% {
+    transform: scale(1) rotate(0);
+  }
+  40% {
+    transform: scale(1.14) rotate(-6deg);
+  }
+  75% {
+    transform: scale(0.98) rotate(3deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.chestText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chestText h2 {
+  margin: 0;
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.chestText p {
+  margin: 6px 0 12px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.bar {
+  height: 14px;
+  border-radius: var(--r-pill);
+  background: #e3edf9;
+  overflow: hidden;
+  max-width: 380px;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--green), #67d28f);
+  transition: width 0.4s ease;
+}
+
+/* 区块标题 */
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.sectionCount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 徽章墙 */
+.badgeGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.badgeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 16px 16px;
+  border-radius: var(--r-md);
+  background: #fff;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.badgeLocked {
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: none;
+  border: 2px dashed #d7e6f7;
+}
+
+.badgeIcon {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+}
+
+.badgeIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.badgeLocked .badgeIcon {
+  background: #eef4fb;
+  color: #a9bdd6;
+}
+
+.badgeLock {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #dbe6f3;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+.badgeLock svg {
+  width: 12px;
+  height: 12px;
+}
+
+.badgeName {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.badgeLocked .badgeName {
+  color: var(--ink-3);
+}
+
+.badgeDesc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.badgeEarned {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-deep);
+}
+
+.badgeTrack {
+  width: 100%;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: var(--r-pill);
+  background: #e3edf9;
+  overflow: hidden;
+}
+
+.badgeTrack span {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--blue);
+}
+
+.badgeProgress {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 装扮 */
+.shopGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.shopCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 16px 16px;
+  border-radius: var(--r-md);
+  background: #fff;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.shopArt {
+  width: 62px;
+  height: 62px;
+  margin-bottom: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fff8e8;
+  color: var(--sun-deep);
+}
+
+.shopArt svg {
+  width: 30px;
+  height: 30px;
+}
+
+.shopCard strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+
+.price svg {
+  width: 15px;
+  height: 15px;
+  color: var(--sun);
+}
+
+.ownedTag {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--green-soft);
+  border-radius: var(--r-pill);
+  padding: 4px 10px;
+}
+
+.buyBtn {
+  min-height: 40px;
+  width: 100%;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--blue-strong);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.buyBtn:disabled {
+  background: #dbe6f3;
+  color: #8fa5c0;
+  cursor: default;
+}
+
+.note {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 14px 14px 20px;
+  }
+  .chestCard {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 22px 18px;
+  }
+  .bar {
+    margin: 0 auto;
+  }
+  .badgeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .shopGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
