@@ -1,0 +1,380 @@
+.page {
+  flex: 1 1 auto;
+  min-height: 100dvh;
+  padding: clamp(16px, 3vh, 32px) clamp(16px, 4vw, 48px) 24px;
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 100%);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.back {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink-2);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.back svg {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.progress {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink-2);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: var(--r-pill);
+  padding: 8px 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.main {
+  max-width: 620px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2.6vh, 26px);
+}
+
+/* 示范句卡片 */
+.card {
+  padding: 28px 24px 22px;
+  border-radius: var(--r-lg);
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 12px 0 rgba(18, 35, 63, 0.06), 0 22px 40px rgba(18, 35, 63, 0.1);
+}
+
+.zh {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.en {
+  margin: 10px 0 18px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.demoBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.16s ease, transform 0.14s ease;
+}
+
+.demoBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.demoBtn:hover {
+  background: #d9ebff;
+}
+
+.demoBtn:active {
+  transform: scale(0.97);
+}
+
+.demoOn {
+  animation: demoPulse 1s ease-in-out infinite;
+}
+
+@keyframes demoPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 124, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(47, 124, 246, 0);
+  }
+}
+
+.hint {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* 权限引导 */
+.permBox {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-radius: var(--r-md);
+  background: #fff8e8;
+  border: 2px solid #ffe1a8;
+}
+
+.permArt {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink-3);
+}
+
+.permArt svg {
+  width: 26px;
+  height: 26px;
+}
+
+.permCross {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #e7a100;
+  clip-path: polygon(0 45%, 100% 45%, 100% 55%, 0 55%);
+}
+
+.permTitle {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #8a5a00;
+}
+
+.permDesc {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.permRetry {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 2px solid var(--sun-deep);
+  border-radius: 12px;
+  background: transparent;
+  color: #8a5a00;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.permRetry:hover {
+  background: #fff;
+}
+
+/* 录音按钮 */
+.recordArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.micBtn {
+  width: 116px;
+  height: 116px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--blue-strong);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 10px 0 var(--blue-deep);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.16s ease;
+  touch-action: none;
+  user-select: none;
+}
+
+.micBtn svg {
+  width: 48px;
+  height: 48px;
+}
+
+.micBtn:hover {
+  background: #1a5cc7;
+}
+
+.micBtn:active {
+  transform: translateY(6px);
+  box-shadow: 0 4px 0 var(--blue-deep);
+}
+
+.micOn {
+  background: #d94a4a;
+  box-shadow: 0 10px 0 #a83535;
+  animation: recPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes recPulse {
+  0%,
+  100% {
+    box-shadow: 0 10px 0 #a83535, 0 0 0 0 rgba(217, 74, 74, 0.4);
+  }
+  50% {
+    box-shadow: 0 10px 0 #a83535, 0 0 0 20px rgba(217, 74, 74, 0);
+  }
+}
+
+.recordHint {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+/* 结果 */
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+  border-radius: var(--r-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.resultIcon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-deep);
+}
+
+.resultIcon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.resultTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.resultNote {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  max-width: 30em;
+}
+
+.resultActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primary {
+  min-height: 56px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--blue-strong);
+  color: #fff;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 0 6px 0 var(--blue-deep);
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.primary:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--blue-deep);
+}
+
+.ghost {
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ghost:hover {
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+}
+
+.disclaimer {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 14px 14px 20px;
+  }
+  .card {
+    padding: 22px 18px 18px;
+  }
+  .micBtn {
+    width: 96px;
+    height: 96px;
+  }
+  .micBtn svg {
+    width: 40px;
+    height: 40px;
+  }
+  .permBox {
+    padding: 14px;
+    gap: 12px;
+  }
+}
