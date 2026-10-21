@@ -138,6 +138,64 @@ export function IconSprite() {
           <path d="M3 11.5h18" stroke="#fff" strokeWidth="2" />
           <rect x="10.4" y="10.4" width="3.2" height="5" rx="1.2" fill="#fff" />
         </symbol>
+
+        {/* 学习端底部导航 */}
+        <symbol id="i-map" viewBox="0 0 24 24">
+          <path
+            d="M9 3.5L3 6v14.5L9 17.5l6 3 6-2.5V3.5l-6 2.5z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <path d="M9 3.5v14M15 6.5v14" stroke="currentColor" strokeWidth="2" />
+        </symbol>
+        <symbol id="i-card" viewBox="0 0 24 24">
+          <rect
+            x="3"
+            y="5"
+            width="18"
+            height="14"
+            rx="3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path d="M7 9.5h6M7 13h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </symbol>
+        <symbol id="i-review" viewBox="0 0 24 24">
+          <path
+            d="M20 12a8 8 0 1 1-2.4-5.7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M20 4v4.5h-4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </symbol>
+        <symbol id="i-trophy" viewBox="0 0 24 24">
+          <path
+            d="M8 4h8v5a4 4 0 0 1-8 0z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M8 5.5H5.5v2A3.5 3.5 0 0 0 9 11M16 5.5h2.5v2A3.5 3.5 0 0 1 15 11M12 13v4M9 20h6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </symbol>
       </defs>
     </svg>
   );
