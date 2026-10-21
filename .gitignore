@@ -32,3 +32,8 @@ Thumbs.db
 # 临时文件
 *.tmp
 *.temp
+
+# 开发服务器日志与临时验证脚本
+web/.devserver.log
+web/.devserver.err.log
+web/verify-*.cjs
