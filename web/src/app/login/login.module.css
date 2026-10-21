@@ -1,0 +1,136 @@
+.page {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 100%);
+}
+
+.head {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(16px, 5vw, 48px);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.trialLink {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-strong);
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 12px;
+}
+
+.trialLink:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.main {
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vh, 40px) 16px 64px;
+}
+
+.card {
+  width: min(440px, 100%);
+  padding: 36px 32px 28px;
+  border-radius: var(--r-lg);
+  background: #fff;
+  box-shadow: 0 18px 0 rgba(18, 35, 63, 0.06), 0 30px 60px rgba(18, 35, 63, 0.12);
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.subtitle {
+  margin: 8px 0 22px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.switch {
+  margin-bottom: 22px;
+}
+
+.alert {
+  margin-bottom: 18px;
+}
+
+.form :global(.ant-form-item-label > label) {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.forgotRow {
+  display: flex;
+  justify-content: flex-end;
+  margin: -8px 0 16px;
+}
+
+.forgot {
+  font-size: 14px;
+  color: var(--blue-strong);
+  text-decoration: none;
+}
+
+.forgot:hover {
+  text-decoration: underline;
+}
+
+.submit {
+  height: 56px !important;
+  border-radius: 18px !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 6px 0 var(--blue-deep) !important;
+  margin-top: 4px;
+}
+
+.submit:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--blue-deep) !important;
+}
+
+.footNote {
+  margin: 22px 0 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.linkBtn {
+  border: 0;
+  background: none;
+  padding: 0 4px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-strong);
+  cursor: pointer;
+}
+
+.linkBtn:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .card {
+    padding: 28px 20px 22px;
+  }
+  .title {
+    font-size: 24px;
+  }
+}
