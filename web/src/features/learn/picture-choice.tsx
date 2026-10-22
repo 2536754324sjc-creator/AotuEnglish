@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Option } from '@/lib/types';
+import { resolveCardImage } from '@/lib/card-images';
 import styles from './picture-choice.module.css';
 
 type Props = {
@@ -13,9 +14,11 @@ type Props = {
   onSelect: (id: string) => void;
   /** 题目的发音文本；有值就显示喇叭按钮 */
   audioText?: string;
+  /** 正确答案的单词，用于无障碍朗读（图片 alt） */
+  answerText?: string;
 };
 
-/** 图卡的兜底图：还没有真实图片时用几何图形占位，不用灰色方块 */
+/** 图卡的兜底图：图片加载失败时用几何图形，不留白也不显示裂图 */
 function PlaceholderArt({ seed }: { seed: string }) {
   // 不能用首字符算色相：Dify 的 imagePrompt 都以 "a cartoon" 开头，
   // 首字母全是 a，会导致所有占位图同色。这里取整串的哈希。
@@ -34,15 +37,51 @@ function PlaceholderArt({ seed }: { seed: string }) {
         <rect x="34" y="28" width="52" height="52" rx="12" fill={`hsl(${hue} 65% 62%)`} />
       )}
       {shape === 2 && (
-        <path
-          d="M60 26l30 52H30z"
-          fill={`hsl(${hue} 65% 62%)`}
-          strokeLinejoin="round"
-        />
+        <path d="M60 26l30 52H30z" fill={`hsl(${hue} 65% 62%)`} strokeLinejoin="round" />
       )}
       <rect x="34" y="86" width="52" height="12" rx="6" fill={`hsl(${hue} 55% 72%)`} />
     </svg>
   );
+}
+
+/**
+ * 单张卡片的图像：先试真实图片，失败自动回落到占位图。
+ * 这样图片没生成全时，页面依然完整可用，不会出现裂图或空白块。
+ */
+function CardArt({ option, label }: { option: Option; label: string }) {
+  const src = resolveCardImage(option);
+  const [failed, setFailed] = useState(false);
+
+  // 选项换了就重置：用 src 作为 key 上的比较基准
+  const srcKey = src ?? '';
+  const [lastSrc, setLastSrc] = useState(srcKey);
+  if (lastSrc !== srcKey) {
+    setLastSrc(srcKey);
+    setFailed(false);
+  }
+
+  if (src && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        key={src}
+        ref={(el) => {
+          // 兜底：图片可能在 React 挂上 onError 之前就失败了（缓存里的 404），
+          // 那样不会触发回调，这里在挂载后主动查一次。
+          if (el && el.complete && el.naturalWidth === 0) setFailed(true);
+        }}
+        src={src}
+        alt={label}
+        className={styles.art}
+        loading="eager"
+        decoding="async"
+        draggable={false}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
+  return <PlaceholderArt seed={option.imagePrompt ?? option.id} />;
 }
 
 export function PictureChoice({
@@ -105,6 +144,8 @@ export function PictureChoice({
         {options.map((opt) => {
           const isSelected = selected === opt.id;
           const isCorrect = revealed && opt.correct;
+          // 图片的 alt 用单词本身，读屏用户能听到
+          const label = opt.text ?? opt.imagePrompt?.split(',')[0] ?? '';
           return (
             <button
               key={opt.id}
@@ -120,12 +161,7 @@ export function PictureChoice({
               disabled={disabled}
               onClick={() => onSelect(opt.id)}
             >
-              {opt.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={opt.imageUrl} alt="" className={styles.art} />
-              ) : (
-                <PlaceholderArt seed={opt.imagePrompt ?? opt.id} />
-              )}
+              <CardArt option={opt} label={label} />
               {isCorrect && (
                 <span className={styles.badge} aria-hidden="true">
                   <svg>

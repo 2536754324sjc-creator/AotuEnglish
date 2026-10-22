@@ -39,3 +39,10 @@ web/.devserver.err.log
 web/verify-*.cjs
 
 push-retry.ps1
+# 图卡图片：由 scripts/gen-card-images.mjs 生成，不进仓库
+# （体积大、可重新生成；如需版本化，删掉这两行即可）
+web/public/cards/*.webp
+web/public/cards/*.png
+
+# 生图脚本的本地输出
+web/scripts/*.local
