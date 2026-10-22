@@ -47,3 +47,5 @@ web/scripts/*.local
 
 # 试跑生成的临时图，不提交
 web/public/cards/_test-*.jpg
+
+web/gen-log.txt
