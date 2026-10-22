@@ -2,15 +2,19 @@
  * 图卡图片的解析规则。
  *
  * 命名与目录约定：
- *   web/public/cards/{word}.webp        通用词卡图
- *   web/public/cards/{word}@2x.webp     高分辨率版本（可选）
+ *   web/public/cards/{word}.jpg
  *
  * 为什么用「词」作为文件名而不是选项 id：
  * 同一个词（如 cow）会出现在多道题的多个选项里，按词存一份即可复用，
  * 也方便人工替换单张图。不同题里同词的图必须一致，按 id 存会重复且易不一致。
+ *
+ * 为什么是 .jpg：智谱 CogView 返回的是 JPEG，脚本统一转成 .jpg 存盘。
  */
 
 export const CARD_DIR = '/cards';
+
+/** 卡片图片扩展名，与 scripts/gen-card-images.mjs 保持一致 */
+export const CARD_EXT = '.jpg';
 
 /** 把英文词规整成文件名：小写、空格转连字符、去掉标点 */
 export function wordToSlug(word: string): string {
@@ -58,10 +62,10 @@ export function resolveCardImage(option: {
   if (option.imageUrl) return option.imageUrl;
 
   const fromText = option.text ? wordToSlug(option.text) : '';
-  if (fromText) return `${CARD_DIR}/${fromText}.webp`;
+  if (fromText) return `${CARD_DIR}/${fromText}${CARD_EXT}`;
 
   const fromPrompt = option.imagePrompt ? promptToSlug(option.imagePrompt) : '';
-  if (fromPrompt) return `${CARD_DIR}/${fromPrompt}.webp`;
+  if (fromPrompt) return `${CARD_DIR}/${fromPrompt}${CARD_EXT}`;
 
   return null;
 }
