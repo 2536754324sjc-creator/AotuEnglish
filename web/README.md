@@ -64,52 +64,83 @@ src/
 
 ## 当前状态
 
-已完成：
+**17 个路由 + 1 个 API 接口全部完成**，资源齐备（52 张图卡 + 52 个音频）。
 
-- 工程骨架、设计令牌、AntD 主题、字体子集加载、i18n 字典
-- `/` 首页 —— 首屏真实地图切片 + 三步闭环 + 四档分层 + 内容体系
-- `/learn` 学习地图 —— 从 `design/kid/map.html` 迁移为 React 组件
-- `/learn/unit/:unitId` 单元学习 —— 四种题型，答题状态机，答错可重试
-- `/learn/unit/:unitId/done` 结算 —— 星星逐颗落下
-- `/parent` 学习周报 —— 三个数字 + G2 每日时长图 + 薄弱环节 + 单元掌握 + 明细表
-- `/parent/plan`、`/parent/learners`、`/parent/settings`、`/parent/account` —— 占位页，导航可用
-- 单元介绍弹层、暂停弹层、退出确认（均为焦点陷阱 + Esc 关闭）
-- 1440×900 与 390×844 两个尺寸验证无横向溢出
-- 完整流程已用真实浏览器跑通：地图 → 选关 → 6 题作答 → 结算
+已完成页面：
+
+| 路由 | 内容 |
+| --- | --- |
+| `/` | 首页：真实地图切片 + 三步闭环 + 四档分层 + 内容体系 |
+| `/trial` | 体验课：不注册直接玩，玩完才留资 |
+| `/courses` | 课程体系：年龄 × 领域双筛选 |
+| `/pricing` | 价格：三档方案 + 月付/年付切换 |
+| `/login` | 注册登录：双模式 + 完整表单校验 |
+| `/learn` | 学习地图：节点三态、路径描画、吉祥物、宝箱进度 |
+| `/learn/unit/:unitId` | 单元学习：四种题型、答题状态机、答错无限重试 |
+| `/learn/unit/:unitId/done` | 结算：星星逐颗落下 |
+| `/learn/words` | 词汇图卡：52 张真实配图、三档筛选、点卡发音 |
+| `/learn/review` | 复习：环形转盘 + 到期天数 |
+| `/learn/speak` | 跟读：按住录音 + Pts 声波 + 权限引导 |
+| `/learn/rewards` | 奖励：宝箱 + 徽章墙 + 装扮商店 |
+| `/parent` | 学习周报：三数字 + G2 图表 + 薄弱项 + 明细表 |
+| `/parent/*` 4 个 | 占位页，导航可用 |
+
+API：`/api/tts` —— 百度主、有道兜底、内存缓存。
 
 题型覆盖：
 
 | 题型 | 状态 |
 | --- | --- |
-| `listen_choose_image` | ✅ 已实现 |
-| `tap_to_read` | ✅ 已实现 |
-| `read_choose` | ✅ 已实现 |
-| `cloze` | ✅ 已实现 |
-| `repeat_word` / `blend_sounds` / `business_scenario` | ⬜ 待 TTS 与组件 |
+| `listen_choose_image` / `tap_to_read` / `read_choose` / `cloze` | ✅ 已实现 |
+| `repeat_word` / `blend_sounds` / `business_scenario` | ⬜ 待做 |
 
-未完成（下一步）：
+未完成：
 
-- `/trial` 体验课、`/courses`、`/pricing`、`/login` 首页通往页面
-- 真实音频替换当前 SpeechSynthesis 兜底
-- 图卡真实配图替换占位几何图
-- 周报周切换与「去练一练」的跨端联动
+- `/learn/reading` 分级读物页
+- 后端接入（数据全在 `mock-data.ts`）
+- 真实鉴权与支付
+- 语音测评（跟读只录音不打分）
 
-## 内容生产链路（OU 工作流）
+## 资源
 
-课程内容由 Dify 工作流「OU」生成，产出前端可直渲染的单元 JSON。
-工作流：[`dify/OU.yml`](./dify/OU.yml)，说明：[`dify/README.md`](./dify/README.md)。
+| 类型 | 数量 | 体积 | 生成方式 |
+| --- | --- | --- | --- |
+| 图卡 | 52 张 JPG | 2.5 MB | `scripts/gen-card-images.mjs` / `gen-wordbank.mjs` |
+| 音频 | 52 个 MP3 | 890 KB | `scripts/gen-audio.mjs` |
+
+## 发音模块（`src/lib/speak.ts`）
+
+三级降级，5 个组件共用：
 
 ```
-src/lib/
-  types.ts            接口契约类型
-  dify-adapter.ts     OU 产出 → 前端 Unit 的转换器
-  sample-ou-course.json   OU 样例（kids-a 农场，第 4 关在用）
-  sample-ou-teen.json     OU 样例（teen 校园）
-  mock-data.ts        当前数据源，接后端时只换这里
+1. 本地音频 /audio/{word}.mp3    优先，零延迟、离线可用
+2. 服务端代理 /api/tts           代理百度/有道，带缓存
+3. 浏览器合成                    最终兜底
 ```
 
-接后端时**只改 `mock-data.ts`**：把 `getUnit` / `mockTodayProgress`
-换成真实 API 调用即可，页面与组件一行不动。
+本地音频只对 `LOCAL_AUDIO` 清单里的词生效，避免无谓 404。
+
+## 内容生产链路
+
+### 文字：Dify 工作流「OU」
+
+```
+dify/OU.yml         工作流
+dify/README.md      用法与验证结论
+```
+
+产出前端可直渲染的单元 JSON。接后端时**只改 `mock-data.ts`**，
+页面与组件一行不动。
+
+### 图卡与音频
+
+```bash
+export MODELSCOPE_API_KEY=...
+node scripts/test-one-image.mjs cow              # 单张试跑
+node scripts/gen-card-images.mjs --provider=modelscope --force
+node scripts/gen-wordbank.mjs --minutes=9        # 批量（101 词库）
+node scripts/gen-audio.mjs                       # 下载音频并更新清单
+```
 
 ## 关键实现约定
 
@@ -120,8 +151,8 @@ src/lib/
 - 只有 `phase === 'correct'` 才锁卡片，保证答错后能重选
 - 中途退出即丢弃本单元进度
 
-## 待确认
+## 已知限制
 
-- 第 4 点语言方案已定：**A 方案**（中文界面 + 英文内容），成人档后续加英文界面。
-- 内容接入：古登堡公共领域文本需剥离 PG 头部尾部与全部商标提及后再入库。
-- 音频：当前用浏览器 SpeechSynthesis 朗读，接 TTS 后替换 `PictureChoice` / `TapCard` 内的 `speak()`。
+- 图卡背景色有轻微色差（rgb 184~237），统一失败过——会误伤白色主体
+- 百度/有道是网页内部接口，非公开 API；52 个音频已本地化，上线后不再调用
+- 跟读只录音不打分，需接入语音测评服务
