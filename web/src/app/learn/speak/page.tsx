@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
 import { WaveCanvas } from '@/features/learn/wave-canvas';
 import { useMicrophone } from '@/features/learn/use-microphone';
+import { speak as speakText, stopSpeaking, type SpeakState } from '@/lib/speak';
 import styles from './speak.module.css';
 
 /** 跟读练习的句子池 */
@@ -37,25 +38,20 @@ export default function SpeakPage() {
 
   /** 播放示范音 */
   const playDemo = useCallback(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(current.en);
-      utter.lang = 'en-US';
-      utter.rate = 0.8;
-      utter.onstart = () => setDemoSpeaking(true);
-      utter.onend = () => setDemoSpeaking(false);
-      utter.onerror = () => setDemoSpeaking(false);
-      window.speechSynthesis.speak(utter);
-    } catch {
-      setDemoSpeaking(false);
-    }
+    speakText({
+      text: current.en,
+      rate: 0.8,
+      onStateChange: (s: SpeakState) => setDemoSpeaking(s === 'playing'),
+    });
   }, [current.en]);
 
   // 进页面先示范一遍
   useEffect(() => {
     const t = window.setTimeout(playDemo, 400);
-    return () => window.clearTimeout(t);
+    return () => {
+      window.clearTimeout(t);
+      stopSpeaking();
+    };
   }, [playDemo]);
 
   const startRecording = useCallback(async () => {

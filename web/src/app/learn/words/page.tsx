@@ -1,49 +1,33 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
 import { mockWords, emptyWords } from '@/lib/mock-words';
 import type { WordCard } from '@/lib/mock-words';
+import { speak as speakText, stopSpeaking } from '@/lib/speak';
 import styles from './words.module.css';
-
-/** 用浏览器语音合成读单词。接真实 TTS 时只替换这个函数。 */
-function speak(text: string, onState?: (speaking: boolean) => void) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-    onState?.(false);
-    return;
-  }
-  try {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    utter.rate = 0.8;
-    utter.onstart = () => onState?.(true);
-    utter.onend = () => onState?.(false);
-    utter.onerror = () => onState?.(false);
-    window.speechSynthesis.speak(utter);
-  } catch {
-    onState?.(false);
-  }
-}
 
 export default function WordsPage() {
   // 用空词包可以看空状态：把 mockWords 换成 emptyWords 即可
   const all = mockWords;
   const [speakingWord, setSpeakingWord] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'collected' | 'locked'>('all');
-  const timer = useRef<number | null>(null);
 
   const handleSpeak = useCallback((card: WordCard) => {
     if (!card.collected) return;
     setSpeakingWord(card.word);
-    speak(card.word, (on) => {
-      if (!on) {
-        if (timer.current) window.clearTimeout(timer.current);
-        timer.current = window.setTimeout(() => setSpeakingWord(null), 300);
-      }
+    speakText({
+      text: card.word,
+      rate: 0.8,
+      onStateChange: (state) => {
+        if (state === 'idle') setSpeakingWord(null);
+      },
     });
   }, []);
+
+  // 离开页面时停掉正在播的声音
+  useEffect(() => () => stopSpeaking(), []);
 
   const collected = useMemo(() => all.filter((w) => w.collected), [all]);
   const shown = useMemo(() => {

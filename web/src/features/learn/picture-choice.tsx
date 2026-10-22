@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Option } from '@/lib/types';
 import { resolveCardImage } from '@/lib/card-images';
+import { speak as speakText, stopSpeaking, type SpeakState } from '@/lib/speak';
 import styles from './picture-choice.module.css';
 
 type Props = {
@@ -92,38 +93,23 @@ export function PictureChoice({
   onSelect,
   audioText,
 }: Props) {
-  const [speaking, setSpeaking] = useState(false);
-  const timer = useRef<number | null>(null);
+  const [state, setState] = useState<SpeakState>('idle');
+  const speaking = state === 'playing';
 
-  const speak = useCallback(() => {
-    if (!audioText || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(audioText);
-      utter.lang = 'en-US';
-      utter.rate = 0.8;
-      utter.onstart = () => setSpeaking(true);
-      utter.onend = () => setSpeaking(false);
-      utter.onerror = () => setSpeaking(false);
-      window.speechSynthesis.speak(utter);
-      // 兜底：某些浏览器不触发 onstart
-      if (timer.current) window.clearTimeout(timer.current);
-      timer.current = window.setTimeout(() => setSpeaking(false), 2500);
-    } catch {
-      setSpeaking(false);
-    }
+  const play = useCallback(() => {
+    if (!audioText) return;
+    speakText({ text: audioText, rate: 0.8, onStateChange: setState });
   }, [audioText]);
 
   useEffect(() => {
     // 进入题目自动读一次，孩子不用先找按钮
-    speak();
+    const t = window.setTimeout(play, 300);
     return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-      if (timer.current) window.clearTimeout(timer.current);
+      window.clearTimeout(t);
+      stopSpeaking();
+      setState('idle');
     };
-  }, [speak]);
+  }, [play]);
 
   return (
     <div className={styles.wrap}>
@@ -132,7 +118,7 @@ export function PictureChoice({
           type="button"
           className={`${styles.speaker} ${speaking ? styles.speaking : ''}`}
           aria-label="再听一次"
-          onClick={speak}
+          onClick={play}
         >
           <svg aria-hidden="true">
             <use href="#i-sound" />
