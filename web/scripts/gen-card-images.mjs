@@ -142,13 +142,13 @@ const STYLE =
  * 做法：从底部裁掉一条边（水印高度 + 余量），再把上方内容居中到正方形。
  * 这样不会因为裁角而破坏主体构图。
  */
-async function normalize(buf) {
+async function normalize(buf, cropWatermark = CROP_WATERMARK) {
   const img = sharp(buf);
   const meta = await img.metadata();
   const w = meta.width ?? 1024;
   const h = meta.height ?? 1024;
 
-  if (!CROP_WATERMARK) {
+  if (!cropWatermark) {
     return sharp(buf)
       .resize(1024, 1024, { fit: 'cover', position: 'center' })
       .jpeg({ quality: 88 })
@@ -172,6 +172,95 @@ async function normalize(buf) {
 }
 
 const PROVIDERS = {
+  /**
+   * 魔搭 ModelScope API-Inference。
+   *
+   * 与其它两家的最大区别是「异步任务制」：
+   *   1. POST /v1/images/generations 带上 X-ModelScope-Async-Mode: true，拿到 task_id
+   *   2. GET /v1/tasks/{task_id} 带上 X-ModelScope-Task-Type: image_generation 轮询
+   *      直到 task_status === 'SUCCEED'，output_images[0] 才是图片地址
+   *
+   * 优势：支持 negative_prompt，可以在生成阶段就排除文字与水印，
+   * 不用像智谱那样事后裁图。
+   *
+   * 前提：账号需绑定阿里云并完成实名认证，否则 API-Inference 不可用。
+   */
+  modelscope: {
+    env: 'MODELSCOPE_API_KEY',
+    /** 生成阶段就排除文字/水印，比事后裁剪干净 */
+    negativePrompt:
+      'text, letters, words, watermark, signature, logo, caption, label, ' +
+      'blurry, low quality, jpeg artifacts, extra limbs, deformed, ' +
+      'realistic photo, 3d render, gradient background',
+    async gen(prompt, key, opts = {}) {
+      const BASE = 'https://api-inference.modelscope.cn/';
+      const model = opts.model ?? 'Qwen/Qwen-Image-2.1-Turbo';
+      const headers = {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      };
+
+      // 1. 提交任务
+      const submit = await fetch(`${BASE}v1/images/generations`, {
+        method: 'POST',
+        headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          negative_prompt: this.negativePrompt,
+          size: '1024x1024',
+          // 固定种子便于复现；如需随机可去掉
+          ...(opts.seed !== undefined ? { seed: opts.seed } : {}),
+        }),
+      });
+
+      const submitText = await submit.text();
+      if (!submit.ok) {
+        throw new Error(`modelscope 提交失败 ${submit.status}: ${submitText.slice(0, 240)}`);
+      }
+      let submitJson;
+      try {
+        submitJson = JSON.parse(submitText);
+      } catch {
+        throw new Error(`modelscope 返回非 JSON: ${submitText.slice(0, 200)}`);
+      }
+      const taskId = submitJson?.task_id;
+      if (!taskId) {
+        throw new Error(`modelscope 未返回 task_id: ${submitText.slice(0, 200)}`);
+      }
+
+      // 2. 轮询结果（Qwen-Image 一般 10-40 秒）
+      for (let i = 0; i < 90; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const poll = await fetch(`${BASE}v1/tasks/${taskId}`, {
+          headers: { ...headers, 'X-ModelScope-Task-Type': 'image_generation' },
+        });
+        if (!poll.ok) {
+          // 轮询偶发 5xx 不算失败，继续试
+          if (poll.status >= 500) continue;
+          throw new Error(`modelscope 查询失败 ${poll.status}`);
+        }
+        const data = await poll.json();
+        const status = data?.task_status;
+
+        if (status === 'SUCCEED') {
+          const url = data?.output_images?.[0];
+          if (!url) throw new Error('modelscope 成功但无图片地址');
+          const img = await fetch(url);
+          if (!img.ok) throw new Error(`下载图片失败 ${img.status}`);
+          return Buffer.from(await img.arrayBuffer());
+        }
+        if (status === 'FAILED') {
+          throw new Error(
+            `modelscope 任务失败: ${JSON.stringify(data?.errors ?? data).slice(0, 200)}`,
+          );
+        }
+        // PENDING / RUNNING 继续等
+      }
+      throw new Error('modelscope 任务超时（约 4.5 分钟）');
+    },
+  },
+
   zhipu: {
     env: 'ZHIPU_API_KEY',
     async gen(prompt, key) {
@@ -252,6 +341,14 @@ async function main() {
   const force = args.includes('--force');
   const dry = args.includes('--dry-run');
 
+  /** --provider=modelscope  指定服务，否则按环境变量自动挑 */
+  const providerArg = args.find((a) => a.startsWith('--provider='))?.split('=')[1];
+  /** --model=Qwen/Qwen-Image-2.1-Turbo */
+  const modelArg = args.find((a) => a.startsWith('--model='))?.split('=')[1];
+  /** --seed=12345  固定种子，便于复现同一张图 */
+  const seedArgRaw = args.find((a) => a.startsWith('--seed='))?.split('=')[1];
+  const seedArg = seedArgRaw !== undefined ? Number(seedArgRaw) : undefined;
+
   const words = collectWords();
   console.log(`共发现 ${words.size} 个需要配图的词：`);
   for (const [slug] of words) console.log('  -', slug);
@@ -263,11 +360,25 @@ async function main() {
 
   let provider = null;
   let key = null;
-  for (const [name, p] of Object.entries(PROVIDERS)) {
-    if (process.env[p.env]) {
-      provider = name;
-      key = process.env[p.env];
-      break;
+  if (providerArg) {
+    const p = PROVIDERS[providerArg];
+    if (!p) {
+      console.error(`未知服务：${providerArg}。可选：${Object.keys(PROVIDERS).join(' / ')}`);
+      process.exit(1);
+    }
+    if (!process.env[p.env]) {
+      console.error(`指定了 ${providerArg}，但环境变量 ${p.env} 未设置。`);
+      process.exit(1);
+    }
+    provider = providerArg;
+    key = process.env[p.env];
+  } else {
+    for (const [name, p] of Object.entries(PROVIDERS)) {
+      if (process.env[p.env]) {
+        provider = name;
+        key = process.env[p.env];
+        break;
+      }
     }
   }
   if (!provider) {
@@ -279,8 +390,18 @@ async function main() {
     );
     process.exit(1);
   }
+
+  // ModelScope 用 negative_prompt 在生成阶段就排除水印，不需要事后裁剪。
+  // 其它家（如智谱免费模型）仍需裁掉右下角水印。
+  const needsCrop = CROP_WATERMARK && provider !== 'modelscope';
+
   console.log(`\n使用服务：${provider}`);
-  console.log(`水印裁剪：${CROP_WATERMARK ? '开启（底部裁 9%）' : '关闭'}`);
+  if (provider === 'modelscope') {
+    console.log(`模型：${modelArg ?? 'Qwen/Qwen-Image-2.1-Turbo'}`);
+    console.log('水印处理：negative_prompt 排除（无需裁剪）');
+  } else {
+    console.log(`水印裁剪：${needsCrop ? '开启（底部裁 9%）' : '关闭'}`);
+  }
 
   mkdirSync(CARD_DIR, { recursive: true });
 
@@ -298,8 +419,11 @@ async function main() {
     const subject = SUBJECT_OVERRIDES[slug] ?? `a single ${word}`;
     const fullPrompt = `${subject}, ${STYLE}`;
     try {
-      const raw = await PROVIDERS[provider].gen(fullPrompt, key);
-      const finalBuf = await normalize(raw);
+      const raw = await PROVIDERS[provider].gen(fullPrompt, key, {
+        model: modelArg,
+        seed: seedArg,
+      });
+      const finalBuf = await normalize(raw, needsCrop);
       writeFileSync(out, finalBuf);
       console.log(`✓ ${slug}  (${Math.round(finalBuf.length / 1024)} KB)`);
       ok++;

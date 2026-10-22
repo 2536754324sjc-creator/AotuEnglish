@@ -12,16 +12,40 @@ apple  car  chair  cow  hello  pencil  pig  red  sheep  table
 
 ## 怎么生成
 
+### 推荐：魔搭 ModelScope（Qwen-Image-2.1-Turbo）
+
 ```bash
 cd web
-export ZHIPU_API_KEY=...        # 或 DASHSCOPE_API_KEY / OPENAI_API_KEY
-node scripts/gen-card-images.mjs --dry-run   # 先看会生成哪些，不调 API
-node scripts/gen-card-images.mjs             # 生成缺失的
-node scripts/gen-card-images.mjs --force     # 全部重新生成
+export MODELSCOPE_API_KEY=...      # https://modelscope.cn/my/myaccesstoken
+
+# 先试一张，确认画风（只花 1 次调用）
+node scripts/test-one-image.mjs cow
+
+# 满意后批量生成
+node scripts/gen-card-images.mjs --provider=modelscope --force
 ```
 
-脚本会从 `src/lib/sample-ou-*.json` 与 `mock-review.ts` 里收集所有出现过的
-`imagePrompt`，按统一画风生成。
+魔搭的优势：支持 `negative_prompt`，能在**生成阶段就排除文字和水印**，
+不用像智谱那样事后裁图。模型 ID 是 `Qwen/Qwen-Image-2.1-Turbo`。
+
+**前提**：账号需绑定阿里云并完成实名认证，否则 API-Inference 不可用。
+
+### 备选：智谱 CogView
+
+```bash
+export ZHIPU_API_KEY=...
+node scripts/gen-card-images.mjs --force
+```
+
+免费模型 `cogview-3-flash` 会在右下角强制打「AI生成」水印，
+脚本会自动裁掉底部 9% 避开。
+
+### 两个脚本的分工
+
+| 脚本 | 用途 |
+| --- | --- |
+| `test-one-image.mjs <word>` | 单张试跑，产物写 `_test-{word}.jpg`，不覆盖正式图 |
+| `gen-card-images.mjs` | 批量生成，写 `{word}.jpg` |
 
 ## 命名规则
 
