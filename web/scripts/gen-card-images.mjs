@@ -111,7 +111,7 @@ const SUBJECT_OVERRIDES = {
   bye: 'a cartoon child waving goodbye, walking away',
   thanks: 'a cartoon child holding hands together in gratitude',
   please: 'a cartoon child asking politely with hands together',
-  red: 'a big red apple and a red balloon side by side',
+  red: 'a bright red fire truck, side view',
   blue: 'a blue butterfly and a blue ball side by side',
   green: 'a green leaf and a green frog side by side',
   yellow: 'a yellow banana and a yellow sun side by side',
@@ -122,18 +122,42 @@ const SUBJECT_OVERRIDES = {
 };
 
 /**
+ * 主体的自然色。
+ *
+ * 踩过的坑：如果只写 "a single cow" + "solid light blue background"，
+ * 模型会把背景的蓝色染到主体上，生成一头蓝色的牛。
+ * 这里把每种东西的自然颜色写清楚。
+ */
+const COLOR_HINTS = {
+  cow: 'a black and white dairy cow',
+  pig: 'a pink pig',
+  sheep: 'a white fluffy sheep',
+  duck: 'a yellow duck',
+  horse: 'a brown horse',
+  hen: 'a brown and white hen',
+  cat: 'an orange tabby cat',
+  dog: 'a brown dog',
+  bird: 'a small blue bird',
+  fish: 'an orange fish',
+  apple: 'a red apple',
+  car: 'a blue car',
+  table: 'a wooden brown table',
+  chair: 'a wooden brown chair',
+  pencil: 'a yellow pencil',
+};
+
+/**
  * 统一画风。
  *
- * 之前用「flat vector illustration, soft sky blue background」时，
- * 模型给出的背景在白、蓝、青绿之间随机跳，一屏三张卡看起来不像一套。
- * 这里改成更硬的约束：
- * - 明确指定纯色背景（hex）
- * - 明确要求 thick dark outline + 扁平风，避免混入写实/3D
- * - 禁止阴影、渐变、文字，减少背景变量
+ * 关键点（都是踩坑换来的）：
+ * - 不要把 hex 背景色和主体写在同一句里，否则颜色会串到主体上
+ * - 明确要求「主体用自然色」「背景是浅蓝」两件事分开说
+ * - 禁止阴影/渐变/文字/水印，减少背景变量
  */
 const STYLE =
-  'flat vector illustration, thick dark outline, solid light blue background #cfe6f7, ' +
-  'single object centered, no shadow, no gradient, no text, no watermark, children book style';
+  'flat vector illustration, thick dark outline, cute cartoon style, ' +
+  'subject in its natural true colors, on a plain pale blue background, ' +
+  'single subject centered, no shadow, no gradient, no text, no watermark';
 
 /**
  * 裁掉右下角水印区域，并统一转成正方形 JPG。
@@ -416,7 +440,8 @@ async function main() {
       skip++;
       continue;
     }
-    const subject = SUBJECT_OVERRIDES[slug] ?? `a single ${word}`;
+    const subject =
+      COLOR_HINTS[slug] ?? SUBJECT_OVERRIDES[slug] ?? `a single ${word}`;
     const fullPrompt = `${subject}, ${STYLE}`;
     try {
       const raw = await PROVIDERS[provider].gen(fullPrompt, key, {

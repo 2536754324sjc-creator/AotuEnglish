@@ -19,9 +19,40 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const CARD_DIR = join(ROOT, 'public', 'cards');
 
+/**
+ * 画风描述。
+ *
+ * 踩过的坑：之前写 "solid light blue background #cfe6f7"，
+ * 模型会把背景色也套到主体上——生成一头蓝色的牛。
+ * 现在把「主体用自然色」和「背景是浅蓝」分开写清楚，
+ * 并显式禁止主体染上背景色。
+ */
 const STYLE =
-  'flat vector illustration, thick dark outline, solid light blue background #cfe6f7, ' +
-  'single object centered, no shadow, no gradient, no text, no watermark, children book style';
+  'flat vector illustration, thick dark outline, cute cartoon style, ' +
+  'subject in its natural true colors, on a plain pale blue background, ' +
+  'single subject centered, no shadow, no gradient, no text, no watermark';
+
+/**
+ * 部分主体的自然色需要明确写出来，
+ * 否则模型容易把背景的蓝色染到主体上（生成过一头蓝色的牛）。
+ */
+const COLOR_HINTS = {
+  cow: 'a black and white dairy cow',
+  pig: 'a pink pig',
+  sheep: 'a white fluffy sheep',
+  duck: 'a yellow duck',
+  horse: 'a brown horse',
+  hen: 'a brown and white hen',
+  cat: 'an orange tabby cat',
+  dog: 'a brown dog',
+  bird: 'a small blue bird',
+  fish: 'an orange fish',
+  apple: 'a red apple',
+  car: 'a blue car',
+  table: 'a wooden brown table',
+  chair: 'a wooden brown chair',
+  pencil: 'a yellow pencil',
+};
 
 const NEGATIVE =
   'text, letters, words, watermark, signature, logo, caption, label, ' +
@@ -55,7 +86,7 @@ if (!key) {
 }
 
 const model = 'Qwen/Qwen-Image-2.1-Turbo';
-const subject = SUBJECT_OVERRIDES[slug] ?? `a single ${slug}`;
+const subject = COLOR_HINTS[slug] ?? SUBJECT_OVERRIDES[slug] ?? `a single ${slug}`;
 const prompt = `${subject}, ${STYLE}`;
 
 console.log('模型:', model);
