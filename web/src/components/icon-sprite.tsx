@@ -196,6 +196,17 @@ export function IconSprite() {
             strokeLinecap="round"
           />
         </symbol>
+        {/* 打开的书：分级读物 */}
+        <symbol id="i-book" viewBox="0 0 24 24">
+          <path
+            d="M12 6.5C10.4 5.4 8.4 4.8 5.5 4.8c-.6 0-1 .4-1 1v12c0 .6.4 1 1 1 2.9 0 4.9.6 6.5 1.7 1.6-1.1 3.6-1.7 6.5-1.7.6 0 1-.4 1-1v-12c0-.6-.4-1-1-1-2.9 0-4.9.6-6.5 1.7Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <path d="M12 6.5v12" fill="none" stroke="currentColor" strokeWidth="2" />
+        </symbol>
       </defs>
     </svg>
   );

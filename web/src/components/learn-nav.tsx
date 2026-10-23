@@ -15,6 +15,7 @@ type Item = {
 const items: Item[] = [
   { href: '/learn', label: '地图', icon: 'i-map', done: true },
   { href: '/learn/words', label: '词卡', icon: 'i-card', done: true },
+  { href: '/learn/reading', label: '读物', icon: 'i-book', done: true },
   { href: '/learn/review', label: '复习', icon: 'i-review', done: true },
   { href: '/learn/speak', label: '跟读', icon: 'i-mic', done: true },
   { href: '/learn/rewards', label: '奖励', icon: 'i-chest', done: true },

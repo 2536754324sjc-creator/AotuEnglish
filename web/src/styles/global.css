@@ -24,6 +24,18 @@
   --line: #d7e6f7;
   --locked: #9bb0cb;
 
+  /* 读本书架封面配色：每本书一种底色，用渐变拉开层次 */
+  --tone-sky-1: #e6f2ff;
+  --tone-sky-2: #c4ddfb;
+  --tone-mint-1: #e2f8ec;
+  --tone-mint-2: #bdeacf;
+  --tone-peach-1: #fff0e6;
+  --tone-peach-2: #ffd8bd;
+  --tone-lilac-1: #f0ebff;
+  --tone-lilac-2: #d6caf9;
+  --tone-sand-1: #fff8e0;
+  --tone-sand-2: #ffe9a8;
+
   --r-sm: 18px;
   --r-md: 24px;
   --r-lg: 32px;
