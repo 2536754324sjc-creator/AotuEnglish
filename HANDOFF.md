@@ -61,7 +61,7 @@ git push origin master
 | `/learn` | 学习地图：节点三态、路径描画、吉祥物、宝箱进度 | ✅ |
 | `/learn/unit/[unitId]` | 单元学习：四种题型、答题状态机、答错无限重试 | ✅ |
 | `/learn/unit/[unitId]/done` | 结算：星星逐颗落下 | ✅ |
-| `/learn/words` | 词汇图卡：52 张真实配图，三档筛选，点卡发音 | ✅ |
+| `/learn/words` | 词汇图卡：**114 张**真实配图，11 组，点卡发音 | ✅ |
 | `/learn/review` | 复习：环形转盘 + 到期天数 + 复用答题机 | ✅ |
 | `/learn/speak` | 跟读：按住录音 + Pts 声波 + 权限引导 | ✅ |
 | `/learn/rewards` | 奖励：宝箱进度 + 徽章墙 + 装扮商店 | ✅ |
@@ -73,9 +73,12 @@ git push origin master
 
 | 类型 | 数量 | 体积 |
 | --- | --- | --- |
-| 图卡 | 52 张 JPG | 2.5 MB |
-| 音频 | 52 个 MP3 | 890 KB |
-| 源码 | 77 个文件 | — |
+| 图卡 | **114 张 JPG** | 5.5 MB |
+| 音频 | **114 个 MP3** | 1.9 MB |
+| 词条 | **114 个，分 11 组** | — |
+| 源码 | 82 个文件 | — |
+
+**三者完全对齐**：任一图卡必有音频、必有词条（`node scripts/gen-mock-words.mjs --dry-run` 可校验）。
 
 ---
 
@@ -126,8 +129,22 @@ cd web
 export MODELSCOPE_API_KEY=...
 node scripts/test-one-image.mjs cow          # 单张试跑
 node scripts/gen-card-images.mjs --provider=modelscope --force
-node scripts/gen-wordbank.mjs --minutes=9    # 从 101 词库批量生成
+node scripts/gen-wordbank.mjs --minutes=9    # 按词库批量生成（已存在自动跳过）
+node scripts/gen-audio.mjs                   # 下载缺失音频 + 同步 speak.ts 清单
+node scripts/gen-mock-words.mjs              # 从词库重建 mock-words.ts
 ```
+
+**补词标准流程（三步，缺一不可）**：
+
+```
+1. 在 gen-wordbank.mjs 的 WORD_BANK 加 { word, subject }
+2. node scripts/gen-wordbank.mjs --minutes=9    # 出图（可多次跑，断点续传）
+3. node scripts/gen-audio.mjs                   # 出音频
+4. node scripts/gen-mock-words.mjs              # 词条进页面
+```
+
+> ⚠️ 第 4 步容易漏。`WORD_BANK` 只决定「生成什么图」，不决定「页面显示什么词」；
+> 词条在 `mock-words.ts`，音标/中文在 `gen-mock-words.mjs` 的 `GROUPS` 里维护。
 
 - 模型：`Qwen/Qwen-Image-2.1-Turbo`
 - 异步任务制：POST 拿 task_id → GET 轮询
@@ -185,9 +202,10 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 | --- | --- |
 | 图卡背景有色差 | 10 张之间 rgb 184~237，尝试统一失败（会误伤白色主体） |
 | 三种题型未实现 | `repeat_word`（要录音）、`blend_sounds`（要拼读音频）、`business_scenario` |
-| 词库还剩 59 词 | 食物/身体/日常/交通/天气/动作 |
+| ~~词库还剩 59 词~~ | ✅ 已补齐，114 词全有图 + 音频 |
 | `/learn/reading` 未做 | 分级读物 |
 | 周切换未接 | `/parent` 的「本周/上周」是静态的 |
+| 词卡「已收集」是写死的 | `gen-mock-words.mjs` 的 `COLLECTED` 集合，未与单元进度联动 |
 
 ---
 
@@ -195,12 +213,8 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 
 ### 阶段一：补齐内容（1–2 天）
 
-1. **生成剩余 59 个词**
-   ```bash
-   node scripts/gen-wordbank.mjs --minutes=9   # 分多次跑完
-   node scripts/gen-audio.mjs                   # 同步下载音频
-   ```
-2. **补 `/learn/reading`** 分级读物页
+1. ~~**生成剩余 59 个词**~~ ✅ **已完成（2026-10-23）**：114 词图 + 音频 + 词条全对齐
+2. **补 `/learn/reading`** 分级读物页 ← **下一步**
 
 ### 阶段二：接入真实数据（3–5 天）
 
@@ -281,5 +295,5 @@ const browser = await puppeteer.launch({
 
 ## 十、当前状态一句话
 
-**前端骨架完整可用（17 个路由、52 张图、52 个音频），核心学习闭环跑通；
+**前端骨架完整可用（17 个路由、114 张图、114 个音频），核心学习闭环跑通；
 后端、鉴权、支付、语音测评都还是模拟的，这是上线前的主要工作量。**
