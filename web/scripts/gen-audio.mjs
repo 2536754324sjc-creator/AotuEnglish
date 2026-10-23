@@ -34,18 +34,47 @@ function toSlug(text) {
     .replace(/\s+/g, '-');
 }
 
-/** 从图卡文件名反推要生成哪些词的音频 */
+/**
+ * 收集要生成音频的词。
+ *
+ * 词源是「词库 + 图卡 + mock-words」三者的并集：
+ * - 词库（gen-wordbank.mjs 的 WORD_BANK）：决定要学哪些词，是权威来源
+ * - 图卡文件名：兜底，防止手放的图漏掉
+ * - mock-words：有些词已进页面但还没配图（如 hello/thanks/please），也得能发音
+ *
+ * 早期版本只读图卡，导致「词库里有、图卡还没生成」的词永远拿不到音频。
+ */
 function collectWords() {
   const words = new Set();
+
+  // 1) 词库：直接解析 gen-wordbank.mjs 里的 { word: 'xxx' }
+  const wordbankFile = join(__dirname, 'gen-wordbank.mjs');
+  if (existsSync(wordbankFile)) {
+    const src = readFileSync(wordbankFile, 'utf8');
+    for (const m of src.matchAll(/\{\s*word:\s*'([^']+)'/g)) {
+      words.add(m[1].replace(/-/g, ' '));
+    }
+  }
+
+  // 2) 图卡文件名兜底
   const cardsDir = join(ROOT, 'public', 'cards');
   if (existsSync(cardsDir)) {
     for (const f of readdirSync(cardsDir)) {
       if (!f.endsWith('.jpg') || f.startsWith('_')) continue;
-      const slug = f.replace(/\.jpg$/, '');
       // 文件名里的连字符还原成空格（如 orange-fruit -> orange fruit）
-      words.add(slug.replace(/-/g, ' '));
+      words.add(f.replace(/\.jpg$/, '').replace(/-/g, ' '));
     }
   }
+
+  // 3) mock-words 里已展示给用户的词
+  const mockWordsFile = join(ROOT, 'src', 'lib', 'mock-words.ts');
+  if (existsSync(mockWordsFile)) {
+    const src = readFileSync(mockWordsFile, 'utf8');
+    for (const m of src.matchAll(/word:\s*'([^']+)'/g)) {
+      words.add(m[1]);
+    }
+  }
+
   return [...words].sort();
 }
 

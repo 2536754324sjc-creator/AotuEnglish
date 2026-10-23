@@ -30,6 +30,12 @@ const CARD_DIR = join(ROOT, 'public', 'cards');
  * 每个词配一句「画面描述」，避免抽象词生成成文字。
  */
 const WORD_BANK = [
+  // ===== 问候（已进 mock-words，之前缺图）=====
+  { word: 'hello', subject: 'two cartoon children waving hello to each other' },
+  { word: 'bye', subject: 'a cartoon child waving goodbye, suitcase beside' },
+  { word: 'thanks', subject: 'a cartoon child hugging a gift, happy expression' },
+  { word: 'please', subject: 'a cartoon child politely bowing with hands together' },
+
   // ===== 动物（最常用，孩子最先学）=====
   { word: 'cat', subject: 'an orange tabby cat sitting, side view' },
   { word: 'dog', subject: 'a brown puppy sitting, side view' },
