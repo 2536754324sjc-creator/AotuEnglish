@@ -122,11 +122,17 @@ if (ouSample) {
   }
 }
 
-/** OU 产出的其它内容档样例：直接作为一个可访问单元，用于验证 teen / adult 档 */
+/**
+ * OU 产出的其它内容档样例：直接作为一个可访问单元，用于验证 teen / adult 档。
+ *
+ * 注意：全部为 locked。之前这里把额外单元都设成 'current'，
+ * 导致地图上同时出现两个「当前关」（契约 §7 要求最多一个）。
+ * 「当前关」只能由 learner 的真实进度决定，样例内容不该抢这个状态。
+ */
 const extraUnits: Unit[] = toUnits(sampleOuTeen as DifyCourse).map((u, i) => ({
   ...u,
   index: units.length + i + 1,
-  status: 'current' as const,
+  status: 'locked' as const,
 }));
 
 units.push(...extraUnits);

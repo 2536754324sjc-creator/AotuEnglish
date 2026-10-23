@@ -220,7 +220,7 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 
 ### 阶段二：接入真实数据（3–5 天）
 
-3. **设计 API 契约**（`docs/frontend-plan.md` §5.1 已有初稿）
+3. ~~**设计 API 契约**~~ ✅ **已完成（2026-10-24）**：`docs/api-contract.md` + `src/lib/api.ts` + 可执行校验
 4. **替换 `mock-data.ts`** 为真实请求
    - 页面与组件**一行不用改**，这是刻意设计的
 5. **接真实鉴权**（`/login` 的 `onFinish`）
@@ -269,9 +269,23 @@ F:\AotuEnglish\
     ├── public\cards\             52 张图卡
     ├── public\audio\             52 个音频
     ├── dify\                     OU 工作流
-    ├── scripts\                  生图 / 生音频 / 词库
+    ├── scripts\                  生图 / 生音频 / 词库 / 读本校验
     └── shots\                    验证截图
 ```
+
+### 数据访问约定（2026-10-24 新增）
+
+页面**不要直接 import `mock-*.ts`**，一律从 `src/lib/api.ts` 取：
+
+```ts
+import { api } from '@/lib/api';
+const { items } = await api.getReadings();
+```
+
+- `NEXT_PUBLIC_API_MODE=mock`（默认）：走本地 mock，离线可用
+- `NEXT_PUBLIC_API_MODE=live`：走真实 HTTP，契约见 `docs/api-contract.md`
+- 两种模式返回**同一个类型**，切换时编译期就能发现问题
+- 契约自测：`CONTRACT_CHECK=1` 启动后 `GET /api/contract-check`
 
 ---
 
