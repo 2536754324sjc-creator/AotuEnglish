@@ -4,7 +4,9 @@ import { use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
-import { getUnit } from '@/lib/mock-data';
+import { PageError, PageLoading } from '@/components/page-states';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import { UnitPlayer } from '@/features/learn/unit-player';
 import styles from './unit.module.css';
 
@@ -12,7 +14,8 @@ type Params = Promise<{ unitId: string }>;
 
 export default function UnitPage({ params }: { params: Params }) {
   const { unitId } = use(params);
-  const unit = getUnit(unitId);
+  const { data, error, loading, reload } = useApi(() => api.getUnit(unitId), [unitId]);
+  const unit = data?.unit ?? null;
   const router = useRouter();
 
   const goDone = useCallback(
@@ -21,6 +24,25 @@ export default function UnitPage({ params }: { params: Params }) {
     },
     [router, unitId],
   );
+
+  if (loading) {
+    return (
+      <div className={styles.missing}>
+        <IconSprite />
+        <PageLoading label="正在准备这一关…" />
+      </div>
+    );
+  }
+
+  // 404 不重试（内容不存在），网络错误可以重试
+  if (error) {
+    return (
+      <div className={styles.missing}>
+        <IconSprite />
+        <PageError error={error} onRetry={reload} />
+      </div>
+    );
+  }
 
   if (!unit) {
     return (

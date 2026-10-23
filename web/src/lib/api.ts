@@ -20,15 +20,17 @@ import type { Badge, ChestState, ShopItem } from './mock-rewards';
  * 切换方式（二选一）：
  *   NEXT_PUBLIC_API_MODE=live  + NEXT_PUBLIC_API_BASE=https://api.example.com
  *   或代码里显式调用 setApiMode('live')
+ *
+ * 注意：本文件同时被服务端组件引用，**不能 import React**。
+ * 异步取数的 hook 在 `use-api.ts`。
  */
 
 export type ApiMode = 'mock' | 'live';
 
 const MODE: ApiMode =
-  (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_MODE === 'live') ? 'live' : 'mock';
+  typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_MODE === 'live' ? 'live' : 'mock';
 
-const BASE =
-  (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE) || '/api';
+const BASE = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE) || '/api';
 
 /* ---------------- 通用请求 ---------------- */
 
@@ -71,7 +73,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
         ...(init?.headers ?? {}),
       },
     });
-  } catch (e) {
+  } catch {
     // 网络断开：统一成 ApiError，调用方不用区分 fetch 异常
     throw new ApiError(0, { error: { code: 'NETWORK', message: '网络连接失败，请稍后重试' } });
   }
@@ -150,6 +152,7 @@ function mockSession(req: SessionRequest): SessionResult {
 
 const mockApi = {
   getProgress: async () => mockTodayProgress,
+
   getUnit: async (unitId: string): Promise<UnitResponse> => {
     const unit = mockTodayProgress.units.find((u) => u.unitId === unitId);
     if (!unit) {
@@ -157,32 +160,39 @@ const mockApi = {
     }
     return { unit };
   },
+
   getCourses: async (): Promise<CoursesResponse> => ({
     items: mockCourses,
     total: mockCourses.length,
     page: 1,
     pageSize: mockCourses.length,
   }),
+
   submitSession: async (req: SessionRequest) => mockSession(req),
+
   getWords: async (): Promise<WordsResponse> => ({
     items: mockWords,
     total: mockWords.length,
     collectedCount: mockWords.filter((w) => w.collected).length,
   }),
+
   getReadings: async (): Promise<ReadingsResponse> => ({
     items: mockReadings,
     total: mockReadings.length,
   }),
+
   getReview: async (): Promise<ReviewResponse> => ({
     // dueDays 越大越先复习
     items: [...mockReviewItems].sort((a, b) => b.dueDays - a.dueDays),
     total: mockReviewItems.length,
   }),
+
   getRewards: async (): Promise<RewardsResponse> => ({
     badges: mockBadges,
     chest: mockChest,
     shop: mockShop,
   }),
+
   getWeeklyReport: async (): Promise<WeeklyReportResponse> => ({
     report: mockWeeklyReport,
     rows: mockReportRows,
@@ -243,3 +253,24 @@ export const api = {
 
 /** 当前模式，调试用 */
 export const apiMode: ApiMode = MODE;
+
+/* ---------------- 服务端同步读取 ---------------- */
+
+/**
+ * 服务端组件专用：同步读首页需要的营销数据。
+ *
+ * 为什么首页特殊：它是 SSR 的营销页，首屏地图切片要出现在 HTML 里（SEO + 首屏速度），
+ * 如果用 hook 异步取，首屏就是空的。营销页的数据变化不频繁，适合构建期预渲染。
+ *
+ * 接后端后这里改成在 Server Component 里 `await fetch()`，
+ * 并用 `revalidate` 控制缓存周期即可，页面结构不变。
+ */
+export function getMarketingSnapshot() {
+  return { progress: mockTodayProgress, courses: mockCourses };
+}
+
+/*
+ * 异步取数 hook 在 `use-api.ts`，不要放回本文件。
+ * 本文件被服务端组件（首页、/api/contract-check）引用，
+ * 一旦 import React hooks，Next 会报 RSC 边界错误。
+ */

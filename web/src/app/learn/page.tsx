@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation';
 import { LearnMap } from '@/components/learn-map/learn-map';
 import { LearnTopbar } from '@/components/learn-map/learn-topbar';
 import { IconSprite } from '@/components/icon-sprite';
+import { PageError, PageLoading } from '@/components/page-states';
 import { UnitSheet } from '@/components/unit-sheet';
 import { PauseCard } from '@/components/pause-card';
-import { mockTodayProgress } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import type { Unit } from '@/lib/types';
 import styles from './learn.module.css';
 
 export default function LearnPage() {
-  const progress = mockTodayProgress;
+  const { data: progress, error, loading, reload } = useApi(() => api.getProgress(), []);
   const router = useRouter();
   const [activeUnit, setActiveUnit] = useState<Unit | null>(null);
   const [paused, setPaused] = useState(false);
@@ -26,6 +28,24 @@ export default function LearnPage() {
     setActiveUnit(null);
     router.push(`/learn/unit/${unit.unitId}`);
   };
+
+  if (loading) {
+    return (
+      <div className={styles.app}>
+        <IconSprite />
+        <PageLoading label="正在打开学习地图…" />
+      </div>
+    );
+  }
+
+  if (error || !progress) {
+    return (
+      <div className={styles.app}>
+        <IconSprite />
+        <PageError error={error ?? new Error('数据缺失')} onRetry={reload} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.app}>

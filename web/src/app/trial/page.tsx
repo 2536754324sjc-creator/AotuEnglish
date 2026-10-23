@@ -3,8 +3,10 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IconSprite } from '@/components/icon-sprite';
+import { PageLoading } from '@/components/page-states';
 import { UnitPlayer } from '@/features/learn/unit-player';
-import { getUnit } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import type { Unit } from '@/lib/types';
 import styles from './trial.module.css';
 
@@ -21,12 +23,23 @@ export default function TrialPage() {
   const [phase, setPhase] = useState<'intro' | 'playing' | 'done'>('intro');
   const [stars, setStars] = useState(1);
 
-  const unit = getUnit(TRIAL_UNIT_ID);
+  const { data, loading } = useApi(() => api.getUnit(TRIAL_UNIT_ID), []);
+  const unit = data?.unit ?? null;
 
   const handleFinish = useCallback((s: number) => {
     setStars(s);
     setPhase('done');
   }, []);
+
+  // 体验课是营销入口，出错时不显示刺眼的错误页，给一个温和的兜底
+  if (loading) {
+    return (
+      <div className={styles.fallback}>
+        <IconSprite />
+        <PageLoading label="正在准备体验课…" />
+      </div>
+    );
+  }
 
   if (!unit) {
     return (

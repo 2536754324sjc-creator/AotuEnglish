@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
+import { PageError, PageLoading } from '@/components/page-states';
 import { useAnswerMachine } from '@/features/learn/use-answer-machine';
 import { PictureChoice } from '@/features/learn/picture-choice';
 import { TapCard } from '@/features/learn/tap-card';
 import { TextChoice } from '@/features/learn/text-choice';
-import { mockReviewItems } from '@/lib/mock-review';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import type { ReviewItem } from '@/lib/mock-review';
 import type { Unit } from '@/lib/types';
 import styles from './review.module.css';
@@ -28,11 +30,31 @@ function toReviewUnit(items: ReviewItem[]): Unit {
 }
 
 export default function ReviewPage() {
-  const items = mockReviewItems;
+  const { data, error, loading, reload } = useApi(() => api.getReview(), []);
+  const items = useMemo(() => data?.items ?? [], [data]);
   const [phase, setPhase] = useState<'intro' | 'playing' | 'done'>('intro');
   const [stars, setStars] = useState(1);
 
   const unit = useMemo(() => toReviewUnit(items), [items]);
+
+  // 三个 early return 都在 hooks 之后，顺序稳定
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <IconSprite />
+        <PageLoading label="正在查今天要复习的内容…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.page}>
+        <IconSprite />
+        <PageError error={error} onRetry={reload} />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

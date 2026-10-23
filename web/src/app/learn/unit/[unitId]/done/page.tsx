@@ -3,7 +3,8 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconSprite } from '@/components/icon-sprite';
-import { getUnit } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import styles from './done.module.css';
 
 type Params = Promise<{ unitId: string }>;
@@ -12,7 +13,10 @@ export default function DonePage({ params }: { params: Params }) {
   const { unitId } = use(params);
   const router = useRouter();
   const search = useSearchParams();
-  const unit = getUnit(unitId);
+
+  // 结算页只需要单元标题，加载中回退成「本关」，不显示 loading 页
+  const { data } = useApi(() => api.getUnit(unitId), [unitId]);
+  const unit = data?.unit ?? null;
 
   const starsParam = Number(search.get('stars'));
   const stars = Number.isFinite(starsParam) ? Math.min(3, Math.max(1, starsParam)) : 1;

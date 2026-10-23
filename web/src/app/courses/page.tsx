@@ -3,7 +3,9 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Segmented, Empty, Tag } from 'antd';
-import { mockCourses } from '@/lib/mock-data';
+import { PageError, PageLoading } from '@/components/page-states';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import { levels } from '@/design/tokens';
 import type { Level } from '@/design/tokens';
 import type { Course } from '@/lib/types';
@@ -43,19 +45,38 @@ export default function CoursesPage() {
   const [level, setLevel] = useState<string>('all');
   const [domain, setDomain] = useState<string>('all');
 
+  const { data, error, loading, reload } = useApi(() => api.getCourses(), []);
+  const courses = useMemo(() => data?.items ?? [], [data]);
+
   const filtered = useMemo(() => {
-    return mockCourses.filter((c) => {
+    return courses.filter((c) => {
       const okLevel = level === 'all' || c.level === level;
       const okDomain = domain === 'all' || c.domain === domain;
       return okLevel && okDomain;
     });
-  }, [level, domain]);
+  }, [courses, level, domain]);
 
   // 只保留数据里真实存在的领域，且顺序固定
   const domains = useMemo(
-    () => DOMAIN_ORDER.filter((d) => mockCourses.some((c) => c.domain === d)),
-    [],
+    () => DOMAIN_ORDER.filter((d) => courses.some((c) => c.domain === d)),
+    [courses],
   );
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <PageLoading label="正在加载课程…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.page}>
+        <PageError error={error} onRetry={reload} backHref="/" backLabel="回首页" />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

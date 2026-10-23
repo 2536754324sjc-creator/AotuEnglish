@@ -5,12 +5,32 @@ import { Table, Segmented, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { DailyMinutesChart } from '@/features/parent/daily-minutes-chart';
 import { MasteryBars } from '@/features/parent/mastery-bars';
-import { mockTodayProgress, mockWeeklyReport, mockReportRows } from '@/lib/mock-data';
+import { PageError, PageLoading } from '@/components/page-states';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import type { ReportRow } from '@/lib/types';
 import styles from './report.module.css';
 
-const report = mockWeeklyReport;
-const rows = mockReportRows;
+/** 周切换：把 ISO 周偏移换算成 YYYY-Www */
+function isoWeekLabel(offset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - offset * 7);
+  // ISO 周：周四所在的那一周
+  const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (target.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+  const week = 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 864e5));
+  return `${target.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+const WEEK_OPTIONS = [
+  { label: '本周', value: 0 },
+  { label: '上周', value: 1 },
+  { label: '更早', value: 2 },
+];
 
 const detailColumns: ColumnsType<ReportRow> = [
   { title: '日期', dataIndex: 'day', key: 'day', width: 90 },
@@ -41,21 +61,45 @@ const detailColumns: ColumnsType<ReportRow> = [
 ];
 
 export default function ParentReportPage() {
-  const [week, setWeek] = useState<string>('本周');
+  const [week, setWeek] = useState<number>(0);
+
+  const reportRes = useApi(() => api.getWeeklyReport(isoWeekLabel(week)), [week]);
+  const progressRes = useApi(() => api.getProgress(), []);
+
+  if (reportRes.loading || progressRes.loading) {
+    return (
+      <div className={styles.page}>
+        <PageLoading label="正在生成周报…" />
+      </div>
+    );
+  }
+
+  if (reportRes.error || !reportRes.data) {
+    return (
+      <div className={styles.page}>
+        <PageError
+          error={reportRes.error ?? new Error('周报数据缺失')}
+          onRetry={reportRes.reload}
+        />
+      </div>
+    );
+  }
+
+  const report = reportRes.data.report;
+  const rows = reportRes.data.rows;
+  const name = progressRes.data?.learnerName ?? '孩子';
 
   return (
     <div className={styles.page}>
       <header className={styles.head}>
         <div>
-          <h1 className={styles.title}>
-            本周 · {mockTodayProgress.learnerName}
-          </h1>
+          <h1 className={styles.title}>本周 · {name}</h1>
           <p className={styles.range}>{report.weekLabel}</p>
         </div>
         <Segmented
           value={week}
-          onChange={setWeek}
-          options={['本周', '上周', '更早']}
+          onChange={(v) => setWeek(Number(v))}
+          options={WEEK_OPTIONS}
           className={styles.weeks}
         />
       </header>

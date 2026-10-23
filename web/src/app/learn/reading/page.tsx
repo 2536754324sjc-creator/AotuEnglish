@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
+import { PageError, PageLoading } from '@/components/page-states';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import { speak as speakText, stopSpeaking } from '@/lib/speak';
-import { mockReadings, splitSentence } from '@/lib/mock-readings';
+import { splitSentence } from '@/lib/reading';
 import type { ReadingBook } from '@/lib/mock-readings';
 import styles from './reading.module.css';
 
@@ -17,19 +20,25 @@ const TONE: Record<ReadingBook['tone'], string> = {
   sand: styles.toneSand,
 };
 
-
 export default function ReadingPage() {
   const [openId, setOpenId] = useState<string | null>(null);
-  const book = mockReadings.find((b) => b.id === openId) ?? null;
+  const { data, error, loading, reload } = useApi(() => api.getReadings(), []);
+
+  const books = data?.items ?? [];
+  const book = books.find((b) => b.id === openId) ?? null;
 
   return (
     <div className={styles.page}>
       <IconSprite />
-      {book ? (
+      {loading ? (
+        <PageLoading label="正在打开书架…" />
+      ) : error ? (
+        <PageError error={error} onRetry={reload} />
+      ) : book ? (
         // key 必须带 book.id：否则换书时 Reader 复用实例，页码会停在上本书记的位置
         <Reader key={book.id} book={book} onClose={() => setOpenId(null)} />
       ) : (
-        <Shelf onOpen={setOpenId} />
+        <Shelf books={books} onOpen={setOpenId} />
       )}
     </div>
   );
@@ -37,8 +46,8 @@ export default function ReadingPage() {
 
 /* ---------------- 书架 ---------------- */
 
-function Shelf({ onOpen }: { onOpen: (id: string) => void }) {
-  const unlocked = mockReadings.filter((b) => b.unlocked);
+function Shelf({ books, onOpen }: { books: ReadingBook[]; onOpen: (id: string) => void }) {
+  const unlocked = books.filter((b) => b.unlocked);
 
   return (
     <>
@@ -50,14 +59,14 @@ function Shelf({ onOpen }: { onOpen: (id: string) => void }) {
         </Link>
         <h1 className={styles.title}>分级读物</h1>
         <span className={styles.counter}>
-          {unlocked.length}/{mockReadings.length}
+          {unlocked.length}/{books.length}
         </span>
       </header>
 
       <p className={styles.lead}>点开一本书，跟着句子一起读。</p>
 
       <ul className={styles.shelf}>
-        {mockReadings.map((b) => {
+        {books.map((b) => {
           const pct = Math.round((b.readPages / b.pages.length) * 100);
           const isNew = b.unlocked && b.readPages === 0;
           const finished = b.unlocked && b.readPages >= b.pages.length;

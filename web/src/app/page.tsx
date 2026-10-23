@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LearnMap } from '@/components/learn-map/learn-map';
 import { IconSprite } from '@/components/icon-sprite';
-import { mockTodayProgress, mockCourses } from '@/lib/mock-data';
+import { getMarketingSnapshot } from '@/lib/api';
 import { levels } from '@/design/tokens';
 import { getDict } from '@/i18n';
 import styles from './home.module.css';
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  const progress = mockTodayProgress;
+  const { progress, courses } = getMarketingSnapshot();
 
   return (
     <>
@@ -111,7 +111,7 @@ export default function HomePage() {
         <section className={styles.courses}>
           <h2>内容体系</h2>
           <div className={styles.courseGrid}>
-            {mockCourses.map((c) => (
+            {courses.map((c) => (
               <Link key={c.slug} href={`/courses/${c.slug}`} className={styles.courseCard}>
                 <span className={styles.courseTag}>{levels[c.level].label}</span>
                 <strong>{c.titleZh}</strong>

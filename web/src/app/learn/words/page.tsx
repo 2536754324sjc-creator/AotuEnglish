@@ -3,14 +3,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
-import { mockWords, emptyWords } from '@/lib/mock-words';
+import { PageError, PageLoading } from '@/components/page-states';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import type { WordCard } from '@/lib/mock-words';
 import { speak as speakText, stopSpeaking } from '@/lib/speak';
 import styles from './words.module.css';
 
 export default function WordsPage() {
-  // 用空词包可以看空状态：把 mockWords 换成 emptyWords 即可
-  const all = mockWords;
+  const { data, error, loading, reload } = useApi(() => api.getWords(), []);
+  const all = useMemo(() => data?.items ?? [], [data]);
+
   const [speakingWord, setSpeakingWord] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'collected' | 'locked'>('all');
 
@@ -36,7 +39,25 @@ export default function WordsPage() {
     return all;
   }, [all, filter]);
 
-  const isEmpty = all.length === 0 || all === emptyWords;
+  const isEmpty = !loading && !error && all.length === 0;
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <IconSprite />
+        <PageLoading label="正在整理词卡…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.page}>
+        <IconSprite />
+        <PageError error={error} onRetry={reload} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

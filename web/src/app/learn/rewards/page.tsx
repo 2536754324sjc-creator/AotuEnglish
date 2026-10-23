@@ -3,18 +3,51 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
-import { mockTodayProgress } from '@/lib/mock-data';
-import { mockBadges, mockChest, mockShop } from '@/lib/mock-rewards';
+import { PageError, PageLoading } from '@/components/page-states';
+import { api } from '@/lib/api';
+import { useApi } from '@/lib/use-api';
 import styles from './rewards.module.css';
 
 export default function RewardsPage() {
-  const progress = mockTodayProgress;
+  // 两个接口互不依赖，并行取；任一失败都归到同一个错误态
+  const progressRes = useApi(() => api.getProgress(), []);
+  const rewardsRes = useApi(() => api.getRewards(), []);
+
   const [chestOpen, setChestOpen] = useState(false);
   const [justOpened, setJustOpened] = useState(false);
 
-  const { remaining, required, claimable, openedCount } = mockChest;
+  const error = progressRes.error ?? rewardsRes.error;
+  const loading = progressRes.loading || rewardsRes.loading;
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <IconSprite />
+        <PageLoading label="正在整理奖励…" />
+      </div>
+    );
+  }
+
+  if (error || !progressRes.data || !rewardsRes.data) {
+    return (
+      <div className={styles.page}>
+        <IconSprite />
+        <PageError
+          error={error ?? new Error('数据缺失')}
+          onRetry={() => {
+            progressRes.reload();
+            rewardsRes.reload();
+          }}
+        />
+      </div>
+    );
+  }
+
+  const progress = progressRes.data;
+  const { badges, chest, shop } = rewardsRes.data;
+  const { remaining, required, claimable, openedCount } = chest;
   const pct = ((required - remaining) / required) * 100;
-  const earned = mockBadges.filter((b) => b.earnedAt);
+  const earned = badges.filter((b) => b.earnedAt);
 
   const handleOpen = () => {
     if (!claimable || chestOpen) return;
@@ -80,12 +113,12 @@ export default function RewardsPage() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>徽章</h2>
             <span className={styles.sectionCount}>
-              {earned.length}/{mockBadges.length}
+              {earned.length}/{badges.length}
             </span>
           </div>
 
           <ul className={styles.badgeGrid}>
-            {mockBadges.map((b) => {
+            {badges.map((b) => {
               const got = Boolean(b.earnedAt);
               return (
                 <li key={b.id} className={`${styles.badgeCard} ${got ? '' : styles.badgeLocked}`}>
@@ -128,7 +161,7 @@ export default function RewardsPage() {
           </div>
 
           <ul className={styles.shopGrid}>
-            {mockShop.map((item) => {
+            {shop.map((item) => {
               const affordable = progress.starTotal >= item.price;
               const canBuy = !item.owned && affordable;
               return (

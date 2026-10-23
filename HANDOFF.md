@@ -205,7 +205,7 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 | 三种题型未实现 | `repeat_word`（要录音）、`blend_sounds`（要拼读音频）、`business_scenario` |
 | ~~词库还剩 59 词~~ | ✅ 已补齐，114 词全有图 + 音频 |
 | ~~`/learn/reading` 未做~~ | ✅ 已完成，见 `src/lib/mock-readings.ts` |
-| 周切换未接 | `/parent` 的「本周/上周」是静态的 |
+| `~` 周切换未接 | `/parent` 的「本周/上周」**已接**（按 ISO 周传 `week` 参数） |
 | 词卡「已收集」是写死的 | `gen-mock-words.mjs` 的 `COLLECTED` 集合，未与单元进度联动 |
 | 读物阅读进度不保存 | `readPages` 是静态值，读完不回写；真实接入时存后端 |
 
@@ -222,8 +222,9 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 
 3. ~~**设计 API 契约**~~ ✅ **已完成（2026-10-24）**：`docs/api-contract.md` + `src/lib/api.ts` + 可执行校验
 4. **替换 `mock-data.ts`** 为真实请求
-   - 页面与组件**一行不用改**，这是刻意设计的
-5. **接真实鉴权**（`/login` 的 `onFinish`）
+   - ✅ **前置已做（2026-10-24）**：9 个页面已全部改走 `api.ts`，页面不再直接 import mock
+   - 后端就绪后只需设 `NEXT_PUBLIC_API_MODE=live`，页面一行不改
+5. **接真实鉴权**（`/login` 的 `onFinish`）→ **方案已定：邮箱认证**
 6. **接支付**（`/pricing`）
 
 ### 阶段三：产品化（1 周）
@@ -278,14 +279,22 @@ F:\AotuEnglish\
 页面**不要直接 import `mock-*.ts`**，一律从 `src/lib/api.ts` 取：
 
 ```ts
-import { api } from '@/lib/api';
-const { items } = await api.getReadings();
+import { api } from '@/lib/api';        // 纯数据层，服务端也能用
+import { useApi } from '@/lib/use-api'; // 客户端 hook
+
+const { data, error, loading, reload } = useApi(() => api.getReadings(), []);
 ```
 
 - `NEXT_PUBLIC_API_MODE=mock`（默认）：走本地 mock，离线可用
 - `NEXT_PUBLIC_API_MODE=live`：走真实 HTTP，契约见 `docs/api-contract.md`
 - 两种模式返回**同一个类型**，切换时编译期就能发现问题
-- 契约自测：`CONTRACT_CHECK=1` 启动后 `GET /api/contract-check`
+- 契约自测：`CONTRACT_CHECK=1` 启动后 `GET /api/contract-check`（24 项）
+
+**为什么拆成两个文件**：`api.ts` 被服务端组件（首页 SSR、contract-check）引用，
+一旦 import React hooks，Next 会报 RSC 边界错误。**不要把 hook 写回 `api.ts`。**
+
+**页面三态**：统一用 `@/components/page-states` 的 `<PageLoading />` / `<PageError />`，
+不要各页各写一套。已迁移的 9 个页面都遵循这个模式。
 
 ---
 
