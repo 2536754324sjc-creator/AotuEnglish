@@ -4,12 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Layout, Menu } from 'antd';
 import type { MenuProps } from 'antd';
-import {
-  BarChartOutlined,
-  TeamOutlined,
-  SettingOutlined,
-  CreditCardOutlined,
-} from '@ant-design/icons';
+import { BarChartOutlined, TeamOutlined, SettingOutlined, CreditCardOutlined } from '@ant-design/icons';
+import { RequireAuth } from '@/components/require-auth';
 import styles from './parent.module.css';
 
 const { Sider, Content } = Layout;
@@ -45,7 +41,9 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
             className={styles.menu}
           />
         </Sider>
-        <Content className={styles.content}>{children}</Content>
+        <Content className={styles.content}>
+          <RequireAuth>{children}</RequireAuth>
+        </Content>
       </Layout>
     </Layout>
   );

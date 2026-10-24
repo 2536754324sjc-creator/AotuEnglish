@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LearnMap } from '@/components/learn-map/learn-map';
 import { IconSprite } from '@/components/icon-sprite';
+import { NavAuth } from '@/components/nav-auth';
 import { getMarketingSnapshot } from '@/lib/api';
 import { levels } from '@/design/tokens';
 import { getDict } from '@/i18n';
@@ -31,14 +32,7 @@ export default function HomePage() {
           <Link href="/pricing">{t.nav.pricing}</Link>
           <Link href="/help">{t.nav.help}</Link>
         </nav>
-        <div className={styles.navActions}>
-          <Link href="/login" className={styles.ghost}>
-            {t.nav.login}
-          </Link>
-          <Link href="/trial" className={styles.cta}>
-            {t.nav.freeTrial}
-          </Link>
-        </div>
+        <NavAuth loginLabel={t.nav.login} trialLabel={t.nav.freeTrial} />
       </header>
 
       <main>

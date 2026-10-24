@@ -1,0 +1,82 @@
+.wrap {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ghost {
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 14px;
+}
+
+.ghost:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 16px;
+  background: var(--blue-strong);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 4px 0 var(--blue-deep);
+  white-space: nowrap;
+}
+
+.cta:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--blue-deep);
+}
+
+/* 已登录：头像 + 名字 */
+.user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--r-pill);
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  max-width: 180px;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .name,
+  .ghost {
+    display: none;
+  }
+}

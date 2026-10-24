@@ -128,6 +128,27 @@ export type SessionResult = {
   nextUnitId: string | null;
 };
 
+/* ---------------- 认证（契约 §4.1） ---------------- */
+
+export type LoginRequest = {
+  email: string;
+  password: string;
+  mode: 'login' | 'signup';
+};
+
+export type AuthUser = {
+  id: string;
+  name: string;
+  level: 'kids-a' | 'kids-b' | 'teen' | 'adult';
+  role: 'learner' | 'parent';
+};
+
+export type AuthSession = {
+  token: string;
+  expiresAt: string;
+  user: AuthUser;
+};
+
 /* ---------------- mock 实现 ---------------- */
 
 /**
@@ -201,6 +222,51 @@ const mockApi = {
     report: mockWeeklyReport,
     rows: mockReportRows,
   }),
+
+  /**
+   * mock 登录。
+   *
+   * 刻意保留几条真实后端会遇到的分支，好让前端的错误处理有东西可测：
+   * - taken@example.com  → 注册时邮箱已占用（409）
+   * - wrong@example.com  → 登录时账号或密码错（401）
+   * - 密码少于 8 位       → 参数校验失败（400）
+   * 其余邮箱一律成功，方便随手试。
+   */
+  login: async (req: LoginRequest): Promise<AuthSession> => {
+    // 模拟网络延迟，让 loading 态能被看见
+    await new Promise((r) => setTimeout(r, 600));
+
+    const email = req.email.trim().toLowerCase();
+
+    if (req.password.length < 8) {
+      throw new ApiError(400, {
+        error: { code: 'INVALID_PARAM', message: '密码至少 8 位' },
+      });
+    }
+
+    if (req.mode === 'signup' && email === 'taken@example.com') {
+      throw new ApiError(409, {
+        error: { code: 'EMAIL_TAKEN', message: '这个邮箱已经注册过了，直接登录吧' },
+      });
+    }
+
+    if (req.mode === 'login' && email === 'wrong@example.com') {
+      throw new ApiError(401, {
+        error: { code: 'UNAUTHORIZED', message: '邮箱或密码不对' },
+      });
+    }
+
+    // 邮箱前缀当名字，方便一眼看出登录的是谁
+    const name = email.split('@')[0] || 'Mia';
+
+    return {
+      // btoa 只在浏览器有；SSR 阶段不会走到这里，但给个兜底避免崩
+      token: `mock.${typeof btoa === 'function' ? btoa(email) : email}.${Date.now()}`,
+      // 30 天后过期，与契约示例一致
+      expiresAt: new Date(Date.now() + 30 * 864e5).toISOString(),
+      user: { id: `u_${name}`, name, level: 'kids-a', role: 'parent' },
+    };
+  },
 };
 
 /* ---------------- 对外 API ---------------- */
@@ -252,6 +318,13 @@ export const api = {
     return MODE === 'mock'
       ? mockApi.getWeeklyReport()
       : request<WeeklyReportResponse>(`/reports/weekly${q}`);
+  },
+
+  login(req: LoginRequest): Promise<AuthSession> {
+    return MODE === 'mock' ? mockApi.login(req) : request<AuthSession>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    });
   },
 };
 

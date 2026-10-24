@@ -197,18 +197,31 @@
 ### 4.1 POST `/auth/login`
 
 ```jsonc
-// 请求
-{ "account": "13800138000", "password": "...", "mode": "login" }  // mode: login | signup
+// 请求（认证方案已定：邮箱 + 密码）
+{ "email": "mia@example.com", "password": "...", "mode": "login" }  // mode: login | signup
 
 // 200
 {
   "token": "eyJ...",
   "expiresAt": "2026-11-24T08:30:00Z",
-  "user": { "id": "u_01HX", "name": "Mia", "level": "kids-a", "role": "learner" }
+  "user": { "id": "u_mia", "name": "mia", "level": "kids-a", "role": "parent" }
 }
 ```
 
-> 现状：`/login` 的 `onFinish` 里是 `setTimeout` 模拟。接入时只改这一个函数。
+**错误分支**（前端已按此实现，mock 可复现）：
+
+| HTTP | `code` | 场景 |
+| --- | --- | --- |
+| 400 | `INVALID_PARAM` | 密码少于 8 位 |
+| 401 | `UNAUTHORIZED` | 邮箱或密码错 |
+| 409 | `EMAIL_TAKEN` | 注册时邮箱已占用 |
+
+> 现状：前端已接 `api.login()`，mock 模式会真实模拟上述三种错误。
+> 后端就绪后只需设 `NEXT_PUBLIC_API_MODE=live`，登录页不用改。
+>
+> ⚠️ **token 传递方式待改**：当前前端存 localStorage 并放进 `Authorization` 头。
+> 正式实现建议改为 httpOnly cookie，接口需配合返回 `Set-Cookie`，
+> 并增加 `POST /auth/logout` 与 `POST /auth/refresh`。
 
 ---
 
@@ -589,7 +602,7 @@ export const api = {
 
 | # | 问题 | 影响 | 状态 |
 | --- | --- | --- | --- |
-| 1 | ~~认证方案~~ | `/auth/login` 的请求体形态 | ✅ **已定：邮箱认证**（`{ email, password, mode }`） |
+| 1 | ~~认证方案~~ | `/auth/login` 的请求体形态 | ✅ **已定并已实现：邮箱认证** |
 | 2 | 支付渠道：微信 / 支付宝 / Stripe？ | `/pricing` 的下单与回调接口（本文档未覆盖） | 待定 |
 | 3 | 语音测评服务选哪家？ | `repeat_word` 打分接口（本文档未覆盖） | 待定 |
 | 4 | 复习算法用 SM-2 还是 FSRS？ | `dueDays` 的计算方 | 待定 |

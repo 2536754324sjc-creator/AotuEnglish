@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Form, Input, Button, Segmented, Alert } from 'antd';
 import type { FormProps } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { IconSprite } from '@/components/icon-sprite';
+import { PageLoading } from '@/components/page-states';
+import { ApiError, api } from '@/lib/api';
+import { saveSession } from '@/lib/auth';
 import styles from './login.module.css';
 
 type Mode = 'login' | 'signup';
@@ -17,30 +20,53 @@ type Fields = {
   confirm?: string;
 };
 
+/**
+ * 外层只负责 Suspense 边界。
+ *
+ * 为什么必须包：内层用了 `useSearchParams()` 读 `?next=`，
+ * 而 /login 是静态预渲染页面 —— 构建时没有真实 URL，
+ * 不加边界会直接构建失败（prerender-error）。
+ */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className={styles.page}><PageLoading label="正在打开登录…" /></div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const search = useSearchParams();
+  // 登录成功后回到用户原本想去的页面（路由守卫会带 ?next= 过来）
+  const next = search.get('next');
   const [mode, setMode] = useState<Mode>('login');
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
   const [form] = Form.useForm<Fields>();
 
-  /**
-   * 提交：真实后端未接入，这里模拟「成功」。
-   * 接入时把这段换成真实请求，失败时 setServerError 即可，表单结构不用动。
-   */
   const onFinish: FormProps<Fields>['onFinish'] = async (values) => {
     setSubmitting(true);
     setServerError('');
     try {
-      await new Promise((r) => setTimeout(r, 700));
-      // 模拟一个服务端错误，方便验证错误展示
-      if (values.email === 'taken@example.com') {
-        setServerError('这个邮箱已经注册过了，直接登录吧');
-        return;
+      const session = await api.login({
+        email: values.email,
+        password: values.password,
+        mode,
+      });
+      saveSession(session);
+      // 只允许站内相对路径，防止 ?next=https://evil.com 这种开放重定向
+      const target = next && next.startsWith('/') && !next.startsWith('//') ? next : '/learn';
+      router.push(target);
+    } catch (e) {
+      if (e instanceof ApiError) {
+        // 401 用登录页自己的文案，其余用服务端返回的
+        setServerError(
+          e.status === 401 ? '邮箱或密码不对，再试一次' : e.message || '登录失败，请稍后再试',
+        );
+      } else {
+        setServerError('网络不太好，请稍后再试');
       }
-      router.push('/learn');
-    } catch {
-      setServerError('网络不太好，请稍后再试');
     } finally {
       setSubmitting(false);
     }
