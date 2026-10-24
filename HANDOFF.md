@@ -264,8 +264,49 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 
 7. **接真实语音测评**（跟读打分）
 8. **接 Azure TTS** 替换百度/有道（合规）
-9. **性能优化**：~~图片转 WebP~~ ✅ 已完成（省 66%）；字体子集化、路由预取待做
+9. **性能优化**：~~图片转 WebP~~ ✅（省 66%）；~~字体子集化~~ ✅（省 92%）；路由预取待做
 10. ~~**SEO**~~ ✅ **已完成（2026-10-25）**，见下节
+
+### 字体与图片优化（2026-10-25）
+
+**字体子集化 —— 单页字体下载 3439 KB → 348 KB（省 89.9%）**
+
+| 项 | 优化前 | 优化后 |
+| --- | --- | --- |
+| Noto Sans SC（4 字重） | 3407 KB | 327 KB |
+| Baloo 2 | 32 KB | 21 KB |
+| 字体文件合计（磁盘） | 7077 KB | 536 KB |
+
+做法：扫描源码统计站内**实际用到的 913 个字符（含 723 个汉字）**，
+用 `pyftsubset` 只保留这些字，输出 woff2 到 `public/fonts/`。
+
+```bash
+node scripts/collect-chars.mjs   # 统计字符 -> scripts/.chars.txt
+python scripts/subset-fonts.py   # 生成子集字体 -> public/fonts/
+python scripts/check-fonts.py    # 校验零缺字（防豆腐块）
+```
+
+> ⚠️ **改了文案要重跑这三步**，否则新出现的字会显示成豆腐块。
+> `check-fonts.py` 会明确报出缺哪些字，提交前跑一次即可。
+
+**字体商用授权（已核实，三层证据）**
+
+| 字体 | 许可证 | 版权方 | 上游 |
+| --- | --- | --- | --- |
+| Baloo 2 | OFL-1.1 | The Baloo 2 Project Authors (EkType) | google/fonts |
+| ZCOOL KuaiLe | OFL-1.1 | The ZCOOL KuaiLe Project Authors | google/fonts |
+| Noto Sans SC | OFL-1.1 | Google Inc. | google/fonts |
+
+证据：① 各包 `package.json` 的 `license` 字段；② 包内完整 OFL 1.1 原文；
+③ `metadata.json` 指向 `github.com/google/fonts`。
+
+OFL 1.1 原文允许：`use, study, copy, merge, embed, modify, redistribute, and sell`。
+两个限制：不能单独售卖字体本身（我们是教育服务，不受影响）；
+修改版不能用 Reserved Font Name（**已核实三个字体均未声明保留名**，故可保留原名）。
+
+许可证全文随字体放在 `public/fonts/OFL.txt`，满足 OFL 的附带要求。
+
+**图卡 WebP**：114 张 5.53 MB → 1.87 MB（省 66%），JPG 保留作为回退。
 
 ### SEO 现状（2026-10-25）
 

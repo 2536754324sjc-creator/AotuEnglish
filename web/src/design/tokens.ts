@@ -45,8 +45,8 @@ export const touch = {
 } as const;
 
 export const font = {
-  /** 英文/数字展示字 */
-  display: "'Baloo 2 Variable', 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif",
+  /** 英文/数字展示字。名字与 public/fonts/fonts.css 的 @font-face 一致 */
+  display: "'Baloo 2', 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif",
   /** 中文展示字 */
   displayZh: "'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif",
   /** 正文 */

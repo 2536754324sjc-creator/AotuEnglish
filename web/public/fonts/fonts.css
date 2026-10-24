@@ -1,0 +1,58 @@
+/*
+ * 子集化字体 —— 由 scripts/subset-fonts.py 生成，不要手改。
+ *
+ * 只包含站内实际用到的字符（见 scripts/.chars.txt）。
+ * 三款字体均为 SIL OFL 1.1 授权，允许免费商用、修改与嵌入：
+ *   Baloo 2       Copyright 2019 The Baloo 2 Project Authors (EkType)
+ *   ZCOOL KuaiLe  Copyright 2018 The ZCOOL KuaiLe Project Authors
+ *   Noto Sans SC  Copyright Google Inc.
+ * 完整许可证见 ./OFL.txt
+ */
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('./baloo-2-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'ZCOOL KuaiLe';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./zcool-kuaile-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./noto-sans-sc-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./noto-sans-sc-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./noto-sans-sc-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./noto-sans-sc-800.woff2') format('woff2');
+}

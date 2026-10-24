@@ -94,6 +94,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN">
+      <head>
+        {/*
+          子集化字体的 @font-face 定义。
+          放在 public/ 下而非 src/，所以用 <link> 引入而不是 CSS @import
+          （构建期无法解析 /fonts/fonts.css 这种运行时路径）。
+          用 preload 提前建立连接，避免字体加载阻塞首屏文字渲染。
+        */}
+        <link rel="stylesheet" href="/fonts/fonts.css" />
+      </head>
       <body>
         <AntdRegistry>
           <Providers>{children}</Providers>

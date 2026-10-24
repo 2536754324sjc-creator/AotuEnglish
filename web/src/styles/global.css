@@ -1,10 +1,21 @@
-@import '@fontsource-variable/baloo-2/wght.css';
-@import '@fontsource/zcool-kuaile/index.css';
-/* 按 unicode-range 切分的子集：浏览器只下载实际用到的分片，不要整包引入 */
-@import '@fontsource/noto-sans-sc/chinese-simplified-400.css';
-@import '@fontsource/noto-sans-sc/chinese-simplified-500.css';
-@import '@fontsource/noto-sans-sc/chinese-simplified-700.css';
-@import '@fontsource/noto-sans-sc/chinese-simplified-800.css';
+/*
+ * 字体：使用子集化版本（public/fonts/fonts.css）。
+ *
+ * 为什么要子集化：Noto Sans SC 的中文分片含 7333 个汉字，
+ * 而站内实际只用 723 个。整包引入时单页要下载 3.4 MB 字体。
+ * 子集化后 4 个字重合计约 436 KB（省 92%）。
+ *
+ * 重新生成：node scripts/collect-chars.mjs && python scripts/subset-fonts.py
+ * 校验：python scripts/check-fonts.py
+ *
+ * 授权：三款字体均为 SIL OFL 1.1，允许免费商用、修改与嵌入；
+ * 版权声明后未声明 Reserved Font Name，因此可保留原名。
+ * 许可证全文见 public/fonts/OFL.txt
+ *
+ * 注意：字体 CSS 不在这里 @import —— 它在 public/ 下，属于静态资源，
+ * 构建期无法解析 `/fonts/fonts.css` 这种运行时路径。
+ * 改由 app/layout.tsx 里的 <link> 引入。
+ */
 
 :root {
   --sky-1: #f2f9ff;
@@ -44,7 +55,8 @@
   --shadow-sm: 0 4px 0 rgba(18, 35, 63, 0.06), 0 10px 22px rgba(18, 35, 63, 0.08);
   --shadow-md: 0 10px 0 rgba(18, 35, 63, 0.07), 0 22px 40px rgba(18, 35, 63, 0.12);
 
-  --font-display: 'Baloo 2 Variable', 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
+  /* 字体族名与 public/fonts/fonts.css 里的 @font-face 一致（Baloo 2 不再是 Variable 后缀） */
+  --font-display: 'Baloo 2', 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
   --font-display-zh: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
   --font-body: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 
