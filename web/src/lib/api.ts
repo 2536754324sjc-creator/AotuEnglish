@@ -1,6 +1,7 @@
 import type { Course, ReportRow, TodayProgress, Unit, WeeklyReport } from './types';
 import { mockCourses, mockReportRows, mockTodayProgress, mockWeeklyReport } from './mock-data';
 import { sampleUnits } from './mock-data';
+import { demoUnits } from './demo-units';
 import { mockWords } from './mock-words';
 import type { WordCard } from './mock-words';
 import { mockReadings } from './mock-readings';
@@ -176,10 +177,11 @@ const mockApi = {
   getProgress: async () => mockTodayProgress,
 
   getUnit: async (unitId: string): Promise<UnitResponse> => {
-    // 地图进度里的单元 + 内容样例，两者都可直链访问
+    // 查找顺序：地图进度里的单元 → 内容样例 → 新题型演示单元
     const unit =
       mockTodayProgress.units.find((u) => u.unitId === unitId) ??
-      sampleUnits.find((u) => u.unitId === unitId);
+      sampleUnits.find((u) => u.unitId === unitId) ??
+      demoUnits.find((u) => u.unitId === unitId);
     if (!unit) {
       throw new ApiError(404, { error: { code: 'NOT_FOUND', message: '单元不存在' } });
     }

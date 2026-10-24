@@ -1,5 +1,6 @@
 import type { Course, ReportRow, TodayProgress, Unit, WeeklyReport } from './types';
 import { toUnits } from './dify-adapter';
+import { demoUnits } from './demo-units';
 import type { DifyCourse } from './dify-adapter';
 import sampleOuCourse from './sample-ou-course.json';
 import sampleOuTeen from './sample-ou-teen.json';
@@ -293,9 +294,15 @@ export const mockEmptyReport: WeeklyReport = {
 
 /**
  * 按 unitId 取单元。
- * 先查学习者进度里的单元，再查内容样例 —— 保证 teen 样例能被直链访问，
- * 但它不会出现在地图上（地图只读 mockTodayProgress.units）。
+ * 查找顺序：学习者进度 → 内容样例 → 新题型演示单元。
+ * 后两者可直链访问，但不会出现在地图上（地图只读 mockTodayProgress.units）。
+ *
+ * 注意：api.ts 的 mockApi.getUnit 有同样的查找顺序，改这里要同步改那边。
  */
 export function getUnit(unitId: string): Unit | undefined {
-  return units.find((u) => u.unitId === unitId) ?? sampleUnits.find((u) => u.unitId === unitId);
+  return (
+    units.find((u) => u.unitId === unitId) ??
+    sampleUnits.find((u) => u.unitId === unitId) ??
+    demoUnits.find((u) => u.unitId === unitId)
+  );
 }

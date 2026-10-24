@@ -7,6 +7,9 @@ import { useAnswerMachine } from '@/features/learn/use-answer-machine';
 import { PictureChoice } from '@/features/learn/picture-choice';
 import { TapCard } from '@/features/learn/tap-card';
 import { TextChoice } from '@/features/learn/text-choice';
+import { RepeatWord } from '@/features/learn/repeat-word';
+import { BlendSounds } from '@/features/learn/blend-sounds';
+import { BusinessScenario } from '@/features/learn/business-scenario';
 import { getDict } from '@/i18n';
 import styles from './unit-player.module.css';
 
@@ -111,11 +114,45 @@ export function UnitPlayer({ unit, onFinish, onExit, exitCopy }: Props) {
               audioText={q.audioText}
             />
           )}
+          {q?.type === 'repeat_word' && (
+            <RepeatWord
+              key={q.id}
+              options={q.options}
+              audioText={q.audioText}
+              selected={machine.state.selected}
+              disabled={machine.state.phase === 'correct'}
+              onSelect={machine.select}
+            />
+          )}
+          {q?.type === 'blend_sounds' && (
+            <BlendSounds
+              key={q.id}
+              options={q.options}
+              audioText={q.audioText}
+              selected={machine.state.selected}
+              disabled={machine.state.phase === 'correct'}
+              onSelect={machine.select}
+            />
+          )}
+          {q?.type === 'business_scenario' && (
+            <BusinessScenario
+              key={q.id}
+              options={q.options}
+              audioText={q.audioText}
+              selected={machine.state.selected}
+              disabled={machine.state.phase === 'correct'}
+              revealed={machine.state.phase === 'correct'}
+              onSelect={machine.select}
+            />
+          )}
           {q &&
             q.type !== 'listen_choose_image' &&
             q.type !== 'tap_to_read' &&
             q.type !== 'read_choose' &&
-            q.type !== 'cloze' && (
+            q.type !== 'cloze' &&
+            q.type !== 'repeat_word' &&
+            q.type !== 'blend_sounds' &&
+            q.type !== 'business_scenario' && (
               <p className={styles.unsupported}>这一题型还在做（{q.type}）</p>
             )}
         </div>

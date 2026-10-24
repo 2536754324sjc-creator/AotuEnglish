@@ -1,0 +1,243 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2.4vh, 22px);
+  width: 100%;
+}
+
+/* ---------------- 示范音 ---------------- */
+
+.example {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 26px 12px 18px;
+  border: 3px solid var(--blue-soft);
+  border-radius: var(--r-pill);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+
+.example svg {
+  width: 26px;
+  height: 26px;
+  color: var(--blue-strong);
+  flex: 0 0 auto;
+}
+
+.example:active {
+  transform: scale(0.97);
+}
+
+.speaking {
+  border-color: var(--blue);
+  animation: soundPulse 0.9s ease-in-out infinite;
+}
+
+@keyframes soundPulse {
+  0%,
+  100% {
+    box-shadow: var(--shadow-sm);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(47, 124, 246, 0.12), var(--shadow-sm);
+  }
+}
+
+/* 单词用展示字体，孩子要看清拼写 */
+.exampleWord {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* ---------------- 波形 ---------------- */
+
+.wave {
+  width: min(100%, 360px);
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  background: var(--sky-1);
+  transition: background 0.2s ease;
+}
+
+.waveOn {
+  background: var(--blue-soft);
+}
+
+/* 静止态：一排安静的竖条，暗示「这里有波形」 */
+.waveIdle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.waveIdle span {
+  width: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+}
+
+/* ---------------- 按住说话 ---------------- */
+
+.hold {
+  min-width: 240px;
+  min-height: 76px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 34px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--blue-strong);
+  color: #fff;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 0 var(--blue-deep);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.16s ease;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hold svg {
+  width: 24px;
+  height: 24px;
+}
+
+.hold:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--blue-deep);
+}
+
+.hold:disabled {
+  cursor: default;
+}
+
+/* 录音中：变红 + 呼吸，明确「正在录」 */
+.holdOn {
+  background: #e8452f;
+  box-shadow: 0 6px 0 #a82d1c;
+  animation: recPulse 1s ease-in-out infinite;
+}
+
+@keyframes recPulse {
+  0%,
+  100% {
+    box-shadow: 0 6px 0 #a82d1c;
+  }
+  50% {
+    box-shadow: 0 6px 0 #a82d1c, 0 0 0 12px rgba(232, 69, 47, 0.16);
+  }
+}
+
+/* 录完：绿色，表示这一步完成了 */
+.done:not(.holdOn) {
+  background: var(--green);
+  box-shadow: 0 6px 0 var(--green-deep);
+}
+
+.hint {
+  margin: 0;
+  min-height: 22px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+/* ---------------- 权限兜底 ---------------- */
+
+.fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 400px;
+  padding: 28px 24px;
+  background: #fff;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.micIcon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sky-1);
+  color: var(--ink-3);
+}
+
+.micIcon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.fallbackTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.fallbackDesc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.retryBtn {
+  min-height: 48px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--blue-strong);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--blue-deep);
+}
+
+.skipBtn {
+  padding: 10px 20px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-3);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .hold {
+    min-width: 200px;
+    min-height: 68px;
+    font-size: 17px;
+  }
+
+  .wave {
+    height: 60px;
+  }
+}

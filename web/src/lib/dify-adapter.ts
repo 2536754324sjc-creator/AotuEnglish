@@ -42,8 +42,22 @@ export type DifyCourse = {
   units: DifyUnit[];
 };
 
-/** 前端已实现的题型；其余会降级成占位提示，不会崩 */
-const IMPLEMENTED_TYPES = new Set(['listen_choose_image', 'tap_to_read']);
+/**
+ * 前端已实现的题型；其余会降级成占位提示，不会崩。
+ *
+ * 与 unit-player.tsx 的分发分支一一对应，改一处必须同步另一处。
+ * 注意：`cloze` 目前复用 TextChoice 组件渲染（文本框选择），
+ * 未来若有真正的填空交互，再拆单独组件。
+ */
+const IMPLEMENTED_TYPES = new Set([
+  'listen_choose_image',
+  'tap_to_read',
+  'read_choose',
+  'cloze',
+  'repeat_word',
+  'blend_sounds',
+  'business_scenario',
+]);
 
 export function isImplementedType(type: string): boolean {
   return IMPLEMENTED_TYPES.has(type);

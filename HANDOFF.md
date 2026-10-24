@@ -202,13 +202,32 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 | 问题 | 说明 |
 | --- | --- |
 | 图卡背景有色差 | 10 张之间 rgb 184~237，尝试统一失败（会误伤白色主体） |
-| 三种题型未实现 | `repeat_word`（要录音）、`blend_sounds`（要拼读音频）、`business_scenario` |
+| ~~三种题型未实现~~ | ✅ **已全部实现（2026-10-25）**，见下节 |
+| **跟读题不作弊，但也没打分** | `repeat_word` 只校验录音时长（<0.6s 判太短），**不编造分数**；接入测评服务后改 `onRecorded` 即可 |
+| **拼读题依赖 audioText** | `blend_sounds` 的正确答案取 `audioText`，`options[].correct` 只用于提交时的 id |
 | ~~词库还剩 59 词~~ | ✅ 已补齐，114 词全有图 + 音频 |
 | ~~`/learn/reading` 未做~~ | ✅ 已完成，见 `src/lib/mock-readings.ts` |
 | ~~周切换未接~~ | ✅ `/parent` 已接，按 ISO 周传 `week` 参数 |
 | 词卡「已收集」是写死的 | `gen-mock-words.mjs` 的 `COLLECTED` 集合，未与单元进度联动 |
 | 读物阅读进度不保存 | `readPages` 是静态值，读完不回写；真实接入时存后端 |
 | 图表数值靠图下摘要 | G2 5 的 label 不支持 `position`（源码标 `@todo`），改用数字摘要行 |
+
+### 三种题型（2026-10-25 完成）
+
+| 题型 | 组件 | 演示地址 | 交互 |
+| --- | --- | --- | --- |
+| `repeat_word` | `repeat-word.tsx` | `/learn/unit/demo-repeat` | 听示范 → 按住说话 → 松开 |
+| `blend_sounds` | `blend-sounds.tsx` | `/learn/unit/demo-blend` | 点字母磁贴拼词，**逐位标红**反馈 |
+| `business_scenario` | `business-scenario.tsx` | `/learn/unit/demo-business` | 对话气泡 + 整句回复选择 |
+
+演示数据在 `src/lib/demo-units.ts`，不进学习地图，只能直链访问
+（地图只渲染学习者进度里的单元）。真实数据要等 OU 工作流支持这些题型
+（见 `docs/frontend-plan.md` §5.1.1）。
+
+**跟读题的设计取舍**：没有语音测评服务，所以**不打分**。
+只做了真实可测的校验：录音 < 0.6 秒提示「太短了」。
+不编造分数是刻意的——假的 85 分比没有分数更伤信任。
+接入讯飞/Azure 后，把 `onRecorded` 里的判定换成真实分数即可，界面不用动。
 
 ---
 
@@ -262,10 +281,13 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 
 ### 阶段三：产品化（1 周）
 
-7. **接真实语音测评**（跟读打分）
+7. **接真实语音测评**（跟读打分）← **组件已就绪，只差服务**
 8. **接 Azure TTS** 替换百度/有道（合规）
 9. **性能优化**：~~图片转 WebP~~ ✅（省 66%）；~~字体子集化~~ ✅（省 92%）；路由预取待做
 10. ~~**SEO**~~ ✅ **已完成（2026-10-25）**，见下节
+
+> 三种题型已于 2026-10-25 全部实现（`repeat_word` / `blend_sounds` / `business_scenario`）。
+> 下一步最值得做的是 **Azure TTS**（解决合规风险），以及把 OU 工作流扩到新题型。
 
 ### 字体与图片优化（2026-10-25）
 
