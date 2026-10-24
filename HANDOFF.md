@@ -205,9 +205,10 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 | 三种题型未实现 | `repeat_word`（要录音）、`blend_sounds`（要拼读音频）、`business_scenario` |
 | ~~词库还剩 59 词~~ | ✅ 已补齐，114 词全有图 + 音频 |
 | ~~`/learn/reading` 未做~~ | ✅ 已完成，见 `src/lib/mock-readings.ts` |
-| `~` 周切换未接 | `/parent` 的「本周/上周」**已接**（按 ISO 周传 `week` 参数） |
+| ~~周切换未接~~ | ✅ `/parent` 已接，按 ISO 周传 `week` 参数 |
 | 词卡「已收集」是写死的 | `gen-mock-words.mjs` 的 `COLLECTED` 集合，未与单元进度联动 |
 | 读物阅读进度不保存 | `readPages` 是静态值，读完不回写；真实接入时存后端 |
+| 图表数值靠图下摘要 | G2 5 的 label 不支持 `position`（源码标 `@todo`），改用数字摘要行 |
 
 ---
 

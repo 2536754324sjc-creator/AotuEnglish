@@ -1,3 +1,9 @@
+.chartWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .chart {
   width: 100%;
 }
@@ -15,4 +21,50 @@
   color: var(--ink-3);
   background: var(--sky-1);
   border-radius: var(--r-sm);
+}
+
+/* 数值摘要：替代柱子上的标签 */
+.chartSummary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.chartSummaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  background: var(--sky-1);
+  border-radius: 12px;
+}
+
+.chartSummaryItem dt {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.chartSummaryItem dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.chartNote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+  .chartSummary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }

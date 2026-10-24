@@ -123,19 +123,23 @@ if (ouSample) {
 }
 
 /**
- * OU 产出的其它内容档样例：直接作为一个可访问单元，用于验证 teen / adult 档。
+ * OU 产出的其它内容档样例（teen 档），用于验证不同内容档的题目渲染。
  *
- * 注意：全部为 locked。之前这里把额外单元都设成 'current'，
- * 导致地图上同时出现两个「当前关」（契约 §7 要求最多一个）。
- * 「当前关」只能由 learner 的真实进度决定，样例内容不该抢这个状态。
+ * 关键：**不进 `units`**，也就不会出现在学习地图上。
+ *
+ * 之前这里 push 进了 units，导致两个问题：
+ * 1. 地图只有 5 个节点坐标，第 6 个单元会绕回第 1 个位置，把「问候」整个盖住
+ * 2. 路径顺序变成「校园生活 → 颜色 → 动物 → 数字 → 我的家」，
+ *    而 4–7 岁应该从「问候」开始，顶栏却还写着「第 4 关」，前后矛盾
+ *
+ * 现在改为独立导出：地图保持干净的 5 关，样例单元仍可通过
+ * `/learn/unit/teen-school-01` 直链访问（真实接入后由后端按档位下发）。
  */
-const extraUnits: Unit[] = toUnits(sampleOuTeen as DifyCourse).map((u, i) => ({
+export const sampleUnits: Unit[] = toUnits(sampleOuTeen as DifyCourse).map((u, i) => ({
   ...u,
-  index: units.length + i + 1,
+  index: i + 1,
   status: 'locked' as const,
 }));
-
-units.push(...extraUnits);
 
 export const mockTodayProgress: TodayProgress = {
   learnerName: 'Mia',
@@ -223,21 +227,25 @@ export const mockCourses: Course[] = [
   },
 ];
 
+const weeklyDailyMinutes: WeeklyReport['dailyMinutes'] = [
+  { day: '一', minutes: 12 },
+  { day: '二', minutes: 16 },
+  { day: '三', minutes: 9 },
+  { day: '四', minutes: 4 },
+  { day: '五', minutes: 18 },
+  { day: '六', minutes: 14 },
+  { day: '日', minutes: 5 },
+];
+
 export const mockWeeklyReport: WeeklyReport = {
   weekLabel: '11/03–11/09',
-  minutes: 68,
+  // 从每日明细汇总，不手写：之前写死 68，而明细合计 78，
+  // 家长一眼就能看出「总时长」和「每日分布」对不上。
+  minutes: weeklyDailyMinutes.reduce((sum, d) => sum + d.minutes, 0),
   unitsDone: 21,
   unitsTotal: 25,
   streakDays: 5,
-  dailyMinutes: [
-    { day: '一', minutes: 12 },
-    { day: '二', minutes: 16 },
-    { day: '三', minutes: 9 },
-    { day: '四', minutes: 4 },
-    { day: '五', minutes: 18 },
-    { day: '六', minutes: 14 },
-    { day: '日', minutes: 5 },
-  ],
+  dailyMinutes: weeklyDailyMinutes,
   weakSounds: [
     { sound: '/θ/', noteZh: 'think、three 的 th 发不准' },
     { sound: '/ð/', noteZh: 'this、that 的 th 发成 d' },
@@ -271,6 +279,11 @@ export const mockEmptyReport: WeeklyReport = {
   unitMastery: [],
 };
 
+/**
+ * 按 unitId 取单元。
+ * 先查学习者进度里的单元，再查内容样例 —— 保证 teen 样例能被直链访问，
+ * 但它不会出现在地图上（地图只读 mockTodayProgress.units）。
+ */
 export function getUnit(unitId: string): Unit | undefined {
-  return units.find((u) => u.unitId === unitId);
+  return units.find((u) => u.unitId === unitId) ?? sampleUnits.find((u) => u.unitId === unitId);
 }
