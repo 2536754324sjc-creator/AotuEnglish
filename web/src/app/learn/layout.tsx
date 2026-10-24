@@ -1,6 +1,30 @@
+import type { Metadata } from 'next';
 import { LearnNav } from '@/components/learn-nav';
 import { RequireAuth } from '@/components/require-auth';
 import styles from './layout.module.css';
+
+/**
+ * 学习端整段 noindex。
+ *
+ * 为什么不放进 robots.txt 的 Disallow：
+ * Disallow 会让爬虫看不到 noindex 标签，页面仍可能以「只有标题」的形式出现在结果里。
+ * noindex 才是「可以抓取，但不要收录」的正确表达。
+ *
+ * 放在 /learn 的 layout 里，一次覆盖 /learn、/learn/words、/learn/reading、
+ * /learn/review、/learn/rewards、/learn/speak、/learn/unit/* 全部子路由。
+ */
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
+};
 
 /**
  * 学习端统一布局。

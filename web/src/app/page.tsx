@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { LearnMap } from '@/components/learn-map/learn-map';
 import { IconSprite } from '@/components/icon-sprite';
 import { NavAuth } from '@/components/nav-auth';
+import { HomeJsonLd, SiteJsonLd } from '@/components/json-ld';
 import { getMarketingSnapshot } from '@/lib/api';
 import { levels } from '@/design/tokens';
 import { getDict } from '@/i18n';
@@ -11,9 +12,11 @@ import styles from './home.module.css';
 const t = getDict('zh');
 
 export const metadata: Metadata = {
+  // 首页用绝对标题，不走模板（否则会变成「AotuEnglish · 每天 15 分钟 · AotuEnglish」）
   title: 'AotuEnglish · 每天 15 分钟，真的开口',
   description:
     '一张看得见进度的英语学习地图。4 岁到成人，按内容分层闯关，家长看得见每周进步。',
+  alternates: { canonical: '/' },
 };
 
 export default function HomePage() {
@@ -21,6 +24,8 @@ export default function HomePage() {
 
   return (
     <>
+      <SiteJsonLd />
+      <HomeJsonLd />
       <IconSprite />
       <header className={styles.nav}>
         <Link href="/" className={styles.logo}>

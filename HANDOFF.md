@@ -264,8 +264,35 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 
 7. **接真实语音测评**（跟读打分）
 8. **接 Azure TTS** 替换百度/有道（合规）
-9. **性能优化**：图片转 WebP、字体子集化、路由预取
-10. **SEO**：sitemap、结构化数据、OG 图
+9. **性能优化**：~~图片转 WebP~~ ✅ 已完成（省 66%）；字体子集化、路由预取待做
+10. ~~**SEO**~~ ✅ **已完成（2026-10-25）**，见下节
+
+### SEO 现状（2026-10-25）
+
+| 能力 | 实现 |
+| --- | --- |
+| 站点配置单一来源 | `src/lib/site.ts`（换域名只改这里或设 `NEXT_PUBLIC_SITE_URL`） |
+| metadataBase + 标题模板 | `app/layout.tsx`，子页只写自己的标题 |
+| canonical | 每个公开页显式声明 |
+| Open Graph + Twitter Card | 1200×630 `og.png`，代码生成（`scripts/gen-og.mjs`） |
+| JSON-LD 结构化数据 | Organization / WebSite / Course / FAQPage / EducationalOrganization |
+| robots.txt | `app/robots.ts` |
+| sitemap.xml | `app/sitemap.ts`，数据源与 `PUBLIC_ROUTES` 同源 |
+| manifest | `app/manifest.ts` |
+| 私人页 noindex | `/learn/*`、`/parent`、`/login` 全部 noindex |
+
+**关键决策：私人页用 noindex，不用 robots.txt Disallow。**
+Disallow 会让爬虫看不到 noindex 标签，页面仍可能以「只有标题」的形式出现在结果里。
+noindex 才是「可以抓、但别收录」的正确表达。二者同时用反而矛盾。
+
+**刻意没做的**：
+- 不写 `aggregateRating`：没有任何真实评分数据，编造评分会被判为垃圾结构化数据
+- 不写 `hreflang`：目前只有中文版，没有多语言变体
+
+**上线前要做**：
+1. 设 `NEXT_PUBLIC_SITE_URL` 为真实域名（现在默认 `https://aotuenglish.com`）
+2. 在 Google Search Console / 百度站长提交 sitemap
+3. 验证 OG 图：用 Facebook Debugger 或 Twitter Card Validator 抓一次
 
 ### 阶段四：上线（3–5 天）
 

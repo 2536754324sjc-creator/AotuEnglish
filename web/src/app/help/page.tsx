@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { FaqJsonLd, SiteJsonLd } from '@/components/json-ld';
 import styles from './help.module.css';
 
 /**
@@ -11,8 +12,14 @@ import styles from './help.module.css';
  */
 
 export const metadata: Metadata = {
-  title: '帮助 · AotuEnglish',
-  description: '常见问题：适合谁、怎么学、家长能看到什么、价格与退款。',
+  title: '帮助',
+  description: '常见问题：适合几岁、怎么学、答错会不会扣星、家长能看到什么、价格与订阅。',
+  alternates: { canonical: '/help' },
+  openGraph: {
+    title: '帮助 · AotuEnglish',
+    description: '常见问题：适合几岁、怎么学、家长能看到什么、价格与订阅。',
+    url: '/help',
+  },
 };
 
 type Faq = { q: string; a: string };
@@ -85,8 +92,13 @@ const FAQS: { group: string; items: Faq[] }[] = [
 ];
 
 export default function HelpPage() {
+  // 把分组 FAQ 拍平，交给结构化数据
+  const allFaqs = FAQS.flatMap((s) => s.items);
+
   return (
     <div className={styles.page}>
+      <SiteJsonLd />
+      <FaqJsonLd items={allFaqs} />
       <header className={styles.head}>
         <Link href="/" className={styles.brand}>
           AotuEnglish
