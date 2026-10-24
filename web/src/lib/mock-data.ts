@@ -237,13 +237,35 @@ const weeklyDailyMinutes: WeeklyReport['dailyMinutes'] = [
   { day: '日', minutes: 5 },
 ];
 
+export const mockReportRows: ReportRow[] = [
+  { day: '11/03', unit: '问候', questions: 12, accuracy: 92, minutes: 12 },
+  { day: '11/04', unit: '颜色', questions: 14, accuracy: 86, minutes: 16 },
+  { day: '11/05', unit: '动物', questions: 10, accuracy: 90, minutes: 9 },
+  { day: '11/06', unit: '复习', questions: 6, accuracy: 100, minutes: 4 },
+  { day: '11/07', unit: '数字', questions: 18, accuracy: 78, minutes: 18 },
+  { day: '11/08', unit: '数字', questions: 16, accuracy: 81, minutes: 14 },
+  { day: '11/09', unit: '我的家', questions: 8, accuracy: 63, minutes: 5 },
+];
+
+/**
+ * 本周完成的单元数：从明细表里数「非复习」的单元去重。
+ *
+ * 为什么算而不是写死：之前写死 21/25，但整个 kids-a 档只有 5 个单元，
+ * 家长看到「21/25 完成单元」会觉得课程有 25 关、孩子快学完了，
+ * 而实际地图上只有 5 关 —— 数字和页面对不上，比不显示更糟。
+ */
+const doneUnitsThisWeek = new Set(
+  mockReportRows.filter((r) => r.unit !== '复习').map((r) => r.unit),
+);
+
 export const mockWeeklyReport: WeeklyReport = {
   weekLabel: '11/03–11/09',
   // 从每日明细汇总，不手写：之前写死 68，而明细合计 78，
   // 家长一眼就能看出「总时长」和「每日分布」对不上。
   minutes: weeklyDailyMinutes.reduce((sum, d) => sum + d.minutes, 0),
-  unitsDone: 21,
-  unitsTotal: 25,
+  // 本周学过的单元数 / 本档课程总单元数（与学习地图的 5 关一致）
+  unitsDone: doneUnitsThisWeek.size,
+  unitsTotal: units.length,
   streakDays: 5,
   dailyMinutes: weeklyDailyMinutes,
   weakSounds: [
@@ -257,22 +279,12 @@ export const mockWeeklyReport: WeeklyReport = {
   ],
 };
 
-export const mockReportRows: ReportRow[] = [
-  { day: '11/03', unit: '问候', questions: 12, accuracy: 92, minutes: 12 },
-  { day: '11/04', unit: '颜色', questions: 14, accuracy: 86, minutes: 16 },
-  { day: '11/05', unit: '动物', questions: 10, accuracy: 90, minutes: 9 },
-  { day: '11/06', unit: '复习', questions: 6, accuracy: 100, minutes: 4 },
-  { day: '11/07', unit: '数字', questions: 18, accuracy: 78, minutes: 18 },
-  { day: '11/08', unit: '数字', questions: 16, accuracy: 81, minutes: 14 },
-  { day: '11/09', unit: '我的家', questions: 8, accuracy: 63, minutes: 5 },
-];
-
 /** 0 数据的周报页面，用来验证空态（不渲染空坐标轴） */
 export const mockEmptyReport: WeeklyReport = {
   weekLabel: '11/10–11/16',
   minutes: 0,
   unitsDone: 0,
-  unitsTotal: 25,
+  unitsTotal: units.length,
   streakDays: 0,
   dailyMinutes: [],
   weakSounds: [],
