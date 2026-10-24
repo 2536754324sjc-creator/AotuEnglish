@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { CardImage } from '@/components/card-image';
 import type { Option } from '@/lib/types';
 import { resolveCardImage } from '@/lib/card-images';
 import { speak as speakText, stopSpeaking, type SpeakState } from '@/lib/speak';
@@ -62,21 +63,15 @@ function CardArt({ option, label }: { option: Option; label: string }) {
   }
 
   if (src && !failed) {
+    // src 形如 /cards/cat.jpg，取 slug 交给 CardImage 生成 <picture>
+    const slug = src.replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, '');
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <CardImage
         key={src}
-        ref={(el) => {
-          // 兜底：图片可能在 React 挂上 onError 之前就失败了（缓存里的 404），
-          // 那样不会触发回调，这里在挂载后主动查一次。
-          if (el && el.complete && el.naturalWidth === 0) setFailed(true);
-        }}
-        src={src}
+        slug={slug}
         alt={label}
+        priority
         className={styles.art}
-        loading="eager"
-        decoding="async"
-        draggable={false}
         onError={() => setFailed(true)}
       />
     );

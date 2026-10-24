@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 import styles from './learn-nav.module.css';
 
 type Item = {
@@ -27,9 +28,13 @@ const items: Item[] = [
  */
 export function LearnNav() {
   const pathname = usePathname();
+  const { isLoggedIn, ready } = useAuth();
 
   // 只在 /learn 及其子页显示；答题页（/learn/unit/*）不显示
   if (pathname.startsWith('/learn/unit')) return null;
+
+  // 未登录时整段学习端都在跳登录页，导航条留着只会闪一下，不如不渲染
+  if (!ready || !isLoggedIn) return null;
 
   return (
     <nav className={styles.nav} aria-label="学习区导航">

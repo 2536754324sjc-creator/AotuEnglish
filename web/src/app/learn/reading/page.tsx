@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { IconSprite } from '@/components/icon-sprite';
+import { CardImage } from '@/components/card-image';
 import { PageError, PageLoading } from '@/components/page-states';
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
@@ -87,14 +88,7 @@ function Shelf({ books, onOpen }: { books: ReadingBook[]; onOpen: (id: string) =
               >
                 <span className={styles.stage}>第 {b.stage} 级</span>
                 <span className={styles.coverArt} aria-hidden="true">
-                  <img
-                    src={`/cards/${b.cover ?? b.pages[0].img}.jpg`}
-                    alt=""
-                    width={1024}
-                    height={1024}
-                    loading="lazy"
-                    draggable={false}
-                  />
+                  <CardImage slug={b.cover ?? b.pages[0].img} alt="" />
                 </span>
 
                 {b.unlocked ? (
@@ -239,14 +233,8 @@ function Reader({ book, onClose }: { book: ReadingBook; onClose: () => void }) {
         aria-label={`第 ${index + 1} 页，共 ${book.pages.length} 页`}
       >
         <figure className={styles.art}>
-          <img
-            key={page.img}
-            src={`/cards/${page.img}.jpg`}
-            alt={page.imgAlt}
-            width={1024}
-            height={1024}
-            draggable={false}
-          />
+          {/* 当前页图片用 priority：翻页时不该看到空白等图 */}
+          <CardImage key={page.img} slug={page.img} alt={page.imgAlt} priority />
         </figure>
 
         <div className={styles.text}>
