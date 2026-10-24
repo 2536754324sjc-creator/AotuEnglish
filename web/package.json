@@ -5,10 +5,12 @@
   "description": "AotuEnglish 英语学习网站 — 营销页 SSR，学习端与监护端客户端渲染",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/ensure-fonts.mjs && next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "fonts": "node scripts/update-fonts.mjs",
+    "fonts:check": "python scripts/check-fonts.py"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.7",

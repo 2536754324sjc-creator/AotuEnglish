@@ -280,14 +280,29 @@ node scripts/gen-audio.mjs        # 下载缺失的，自动更新清单
 做法：扫描源码统计站内**实际用到的 913 个字符（含 723 个汉字）**，
 用 `pyftsubset` 只保留这些字，输出 woff2 到 `public/fonts/`。
 
+**改文案后要不要处理字体？—— 不用。**
+
+`npm run build` 会自动检查：
+- 字符集没变 → 秒过，什么都不做
+- 字符集变了 → **自动重建子集**并校验，然后继续构建
+- 重建失败 → 只警告，不阻断（页面仍可正常显示）
+
+也就是说**你完全不用记任何字体命令**，正常开发构建即可。
+
+想手动跑：`npm run fonts`（字符没变会跳过，加 `--force` 强制重建）。
+
+> 关于「豆腐块」：实测确认**不会出现豆腐块**。
+> 子集里没有的字，浏览器会回退到系统字体（Windows 微软雅黑 / Mac 苹方），
+> 只是字形与整体略有差异，肉眼基本看不出。
+> 所以自动重建只是为了视觉统一，**不是必须**。
+
+底层三个脚本（一般不用直接调）：
+
 ```bash
 node scripts/collect-chars.mjs   # 统计字符 -> scripts/.chars.txt
 python scripts/subset-fonts.py   # 生成子集字体 -> public/fonts/
-python scripts/check-fonts.py    # 校验零缺字（防豆腐块）
+python scripts/check-fonts.py    # 校验零缺字，会明确报出缺哪些字
 ```
-
-> ⚠️ **改了文案要重跑这三步**，否则新出现的字会显示成豆腐块。
-> `check-fonts.py` 会明确报出缺哪些字，提交前跑一次即可。
 
 **字体商用授权（已核实，三层证据）**
 
