@@ -11,6 +11,12 @@ import { mockReviewItems } from './mock-review';
 import type { ReviewItem } from './mock-review';
 import { mockBadges, mockChest, mockShop } from './mock-rewards';
 import type { Badge, ChestState, ShopItem } from './mock-rewards';
+import type {
+  AccountOverview,
+  Learner,
+  StudyPlan,
+  StudyPreferences,
+} from './parent-types';
 
 /**
  * 数据访问层 —— 页面从这里取数据，不再直接 import mock 文件。
@@ -179,6 +185,21 @@ function mockSession(req: SessionRequest): SessionResult {
 const mockApi = {
   getProgress: async () => mockTodayProgress,
 
+  /* ---------- 家长端设置（本地持久化） ---------- */
+
+  getPlan: async (): Promise<StudyPlan> => readLocal('plan', DEFAULT_PLAN),
+  savePlan: async (p: StudyPlan): Promise<StudyPlan> => writeLocal('plan', p),
+
+  getLearners: async (): Promise<Learner[]> => readLocal('learners', DEFAULT_LEARNERS),
+  saveLearners: async (list: Learner[]): Promise<Learner[]> => writeLocal('learners', list),
+
+  getPreferences: async (): Promise<StudyPreferences> =>
+    readLocal('prefs', DEFAULT_PREFERENCES),
+  savePreferences: async (p: StudyPreferences): Promise<StudyPreferences> =>
+    writeLocal('prefs', p),
+
+  getAccount: async (): Promise<AccountOverview> => readLocal('account', DEFAULT_ACCOUNT),
+
   getUnit: async (unitId: string): Promise<UnitResponse> => {
     // 查找顺序：地图进度里的单元 → 内容样例 → 新题型演示单元
     const unit =
@@ -274,6 +295,78 @@ const mockApi = {
   },
 };
 
+/* ---------------- 家长端设置的本地存储 ---------------- */
+
+/**
+ * 这些设置类数据目前只在浏览器本地保存。
+ *
+ * 为什么不做成纯内存 mock：设置改了刷新就丢，会被当成 bug。
+ * 为什么放在 api.ts 而不是页面里：页面不直接碰存储，切后端时只改这里。
+ */
+const PARENT_STORE_PREFIX = 'aotu.parent.';
+
+const DEFAULT_PLAN: StudyPlan = {
+  level: 'kids-a',
+  dailyMinutes: 15,
+  dailyStars: 5,
+  daysPerWeek: 5,
+  remindAt: '',
+  restDays: [0, 6],
+};
+
+const DEFAULT_LEARNERS: Learner[] = [
+  {
+    id: 'u_mia',
+    name: 'Mia',
+    level: 'kids-a',
+    avatar: 'M',
+    birthYear: null,
+    createdAt: '2026-09-01',
+    active: true,
+  },
+];
+
+const DEFAULT_PREFERENCES: StudyPreferences = {
+  weeklyReportEmail: true,
+  dailyReminder: false,
+  quietStart: '21:00',
+  quietEnd: '07:00',
+  soundEffects: true,
+  locale: 'zh',
+};
+
+const DEFAULT_ACCOUNT: AccountOverview = {
+  email: 'mia@example.com',
+  name: 'Mia 的家长',
+  planId: 'family',
+  planName: '家庭版',
+  cycle: 'monthly',
+  renewsAt: null,
+  invoices: [],
+};
+
+function readLocal<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = window.localStorage.getItem(PARENT_STORE_PREFIX + key);
+    if (!raw) return fallback;
+    return { ...fallback, ...(JSON.parse(raw) as object) } as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeLocal<T extends object>(key: string, value: T): T {
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(PARENT_STORE_PREFIX + key, JSON.stringify(value));
+    } catch {
+      // 隐私模式写不进去：仍然把值返回给调用方，界面保持用户刚改的状态
+    }
+  }
+  return value;
+}
+
 /* ---------------- 对外 API ---------------- */
 
 export const api = {
@@ -330,6 +423,50 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(req),
     });
+  },
+
+  /* ---------- 家长端设置 ---------- */
+
+  getPlan(): Promise<StudyPlan> {
+    return MODE === 'mock' ? mockApi.getPlan() : request<StudyPlan>('/users/me/plan');
+  },
+
+  savePlan(p: StudyPlan): Promise<StudyPlan> {
+    return MODE === 'mock'
+      ? mockApi.savePlan(p)
+      : request<StudyPlan>('/users/me/plan', { method: 'PUT', body: JSON.stringify(p) });
+  },
+
+  getLearners(): Promise<Learner[]> {
+    return MODE === 'mock' ? mockApi.getLearners() : request<Learner[]>('/users/me/learners');
+  },
+
+  saveLearners(list: Learner[]): Promise<Learner[]> {
+    return MODE === 'mock'
+      ? mockApi.saveLearners(list)
+      : request<Learner[]>('/users/me/learners', {
+          method: 'PUT',
+          body: JSON.stringify({ items: list }),
+        });
+  },
+
+  getPreferences(): Promise<StudyPreferences> {
+    return MODE === 'mock'
+      ? mockApi.getPreferences()
+      : request<StudyPreferences>('/users/me/preferences');
+  },
+
+  savePreferences(p: StudyPreferences): Promise<StudyPreferences> {
+    return MODE === 'mock'
+      ? mockApi.savePreferences(p)
+      : request<StudyPreferences>('/users/me/preferences', {
+          method: 'PUT',
+          body: JSON.stringify(p),
+        });
+  },
+
+  getAccount(): Promise<AccountOverview> {
+    return MODE === 'mock' ? mockApi.getAccount() : request<AccountOverview>('/users/me/account');
   },
 };
 

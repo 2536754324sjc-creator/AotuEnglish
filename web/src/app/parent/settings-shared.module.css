@@ -1,0 +1,243 @@
+/* 家长端四个设置页共用样式：保持与周报页同一套视觉语言 */
+
+.page {
+  max-width: 880px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.sub {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.block {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: clamp(16px, 2.4vw, 24px);
+  margin-bottom: 16px;
+}
+
+.blockTitle {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.blockHint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+/* 一行设置项：左标题右控件 */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.row:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.rowMain {
+  min-width: 220px;
+  flex: 1;
+}
+
+.rowLabel {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.rowDesc {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
+.rowControl {
+  flex: 0 0 auto;
+}
+
+/* 档位选择卡片 */
+.levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.levelCard {
+  text-align: left;
+  padding: 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-lg);
+  background: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+
+.levelCard:hover {
+  border-color: var(--blue-strong);
+  transform: translateY(-1px);
+}
+
+.levelCardOn {
+  border-color: var(--blue-strong);
+  background: var(--blue-soft);
+}
+
+.levelName {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.levelAges {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-strong);
+}
+
+.levelBlurb {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* 底部操作条 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.saved {
+  font-size: 13px;
+  font-weight: 700;
+  color: #228a4c;
+}
+
+/* 原生时间输入：样式与 AntD 控件对齐，避免为此引入 dayjs 依赖 */
+.timeInput {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.timeInput:focus-visible {
+  outline: 2px solid var(--blue-strong);
+  outline-offset: 1px;
+}
+
+/* 学习者卡片列表 */
+.learnerList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.learnerCard {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: #fff;
+}
+
+.learnerCardActive {
+  border-color: var(--blue-strong);
+  box-shadow: 0 0 0 3px var(--blue-soft);
+}
+
+.avatar {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue-strong);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.learnerName {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.learnerMeta {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+  .row {
+    align-items: flex-start;
+  }
+  .rowControl {
+    width: 100%;
+  }
+}
