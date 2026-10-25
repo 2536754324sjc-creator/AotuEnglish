@@ -8,6 +8,7 @@ import { PageError, PageLoading } from '@/components/page-states';
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import { speak as speakText, stopSpeaking } from '@/lib/speak';
+import { saveReadingPage } from '@/lib/progress-store';
 import { splitSentence } from '@/lib/reading';
 import type { ReadingBook } from '@/lib/mock-readings';
 import styles from './reading.module.css';
@@ -37,7 +38,15 @@ export default function ReadingPage() {
         <PageError error={error} onRetry={reload} />
       ) : book ? (
         // key 必须带 book.id：否则换书时 Reader 复用实例，页码会停在上本书记的位置
-        <Reader key={book.id} book={book} onClose={() => setOpenId(null)} />
+        <Reader
+          key={book.id}
+          book={book}
+          onClose={() => {
+            setOpenId(null);
+            // 重新拉一次书架，让进度条体现刚读到的页数
+            reload();
+          }}
+        />
       ) : (
         <Shelf books={books} onOpen={setOpenId} />
       )}
@@ -145,6 +154,12 @@ function Reader({ book, onClose }: { book: ReadingBook; onClose: () => void }) {
   const page = book.pages[index];
   const isFirst = index === 0;
   const isLast = index === book.pages.length - 1;
+
+  // 每翻到一页就记下进度（只前进不后退），关闭阅读器后书架会刷新出新的进度条。
+  // 之前 readPages 是写死的静态值，读完也不回写 —— 见 HANDOFF §三 第 9 项。
+  useEffect(() => {
+    saveReadingPage(book.id, index + 1);
+  }, [book.id, index]);
 
   // 卸载时停掉声音并清掉动画定时器，避免在已卸载组件上 setState
   useEffect(() => {

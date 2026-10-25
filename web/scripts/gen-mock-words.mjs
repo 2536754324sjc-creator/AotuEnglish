@@ -203,11 +203,14 @@ const GROUPS = [
 ];
 
 /**
- * 已收集（已通关）的词：对应 mock-data.ts 里 status === 'done' 的单元。
- * 目前只有问候 + 颜色 + 前两个数字是「已通关」状态，其余显示为待解锁，
- * 这样词卡页的「已收集 / 未收集」筛选才有真实对比。
+ * 词卡的 `collected` 现在由**真实进度**决定，不再是生成期写死的集合。
+ *
+ * 历史问题：这里曾有一个固定的 COLLECTED 集合（固定 10 个词），
+ * 与单元完成状态毫无关系 —— 答完「动物」那一关，动物词仍然锁着。
+ * 现改为 `lib/api.ts` 的 getWords() 按「已完成单元」在运行时推导，
+ * 本脚本只负责词库本身，输出的 collected 字段仅作为初始占位。
  */
-const COLLECTED = new Set(['hello', 'bye', 'thanks', 'please', 'red', 'blue', 'green', 'yellow', 'one', 'two']);
+const INITIAL_COLLECTED = false;
 
 function readSlugs(dir, ext) {
   if (!existsSync(dir)) return new Set();
@@ -232,7 +235,7 @@ function main() {
     for (const [word, phonetic, meaningZh] of g.words) {
       if (!cards.has(word)) noCard.push(word);
       if (!audio.has(word)) noAudio.push(word);
-      const collected = COLLECTED.has(word);
+      const collected = INITIAL_COLLECTED;
       rows.push(
         `  { word: '${word}', phonetic: '${phonetic}', meaningZh: '${meaningZh}', ` +
           `unitZh: '${g.unit}', collected: ${collected}, level: 'kids-a' },`,

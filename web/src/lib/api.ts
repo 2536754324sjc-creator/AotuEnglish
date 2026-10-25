@@ -1,5 +1,6 @@
 import type { Course, ReportRow, TodayProgress, Unit, WeeklyReport } from './types';
 import { getToken } from './auth';
+import { applyDoneUnits, getDoneUnits, markUnitDone, getReadingProgress } from './progress-store';
 import { mockCourses, mockReportRows, mockTodayProgress, mockWeeklyReport } from './mock-data';
 import { sampleUnits } from './mock-data';
 import { demoUnits } from './demo-units';
@@ -182,8 +183,26 @@ function mockSession(req: SessionRequest): SessionResult {
   };
 }
 
+/* ---------------- 词卡与读物的进度推导 ---------------- */
+
+/**
+ * 已完成单元对应的中文单元名（词卡的 unitZh 用的是中文名）。
+ *
+ * 来源是地图单元本身（unitId -> titleZh），不另建一份映射表 ——
+ * 否则改了单元标题，词卡分组会悄悄对不上。
+ */
+function doneUnitTitles(): Set<string> {
+  const done = new Set(getDoneUnits());
+  const titles = new Set<string>();
+  for (const u of [...mockTodayProgress.units, ...sampleUnits, ...demoUnits]) {
+    if (done.has(u.unitId)) titles.add(u.titleZh);
+  }
+  return titles;
+}
+
 const mockApi = {
-  getProgress: async () => mockTodayProgress,
+  // 地图进度 = 静态基线 + 本地完成记录，这样答完一关地图真的会前进
+  getProgress: async () => applyDoneUnits(mockTodayProgress, getDoneUnits()),
 
   /* ---------- 家长端设置（本地持久化） ---------- */
 
@@ -219,18 +238,41 @@ const mockApi = {
     pageSize: mockCourses.length,
   }),
 
-  submitSession: async (req: SessionRequest) => mockSession(req),
+  submitSession: async (req: SessionRequest) => {
+    // 记下完成状态，让地图 / 词卡 / 练习进度都跟着走
+    markUnitDone(req.unitId);
+    return mockSession(req);
+  },
 
-  getWords: async (): Promise<WordsResponse> => ({
-    items: mockWords,
-    total: mockWords.length,
-    collectedCount: mockWords.filter((w) => w.collected).length,
-  }),
+  /**
+   * 词卡：`collected` 由「哪些单元已完成」推导，不再是写死的常量。
+   *
+   * 之前 gen-mock-words.mjs 里有一个固定的 COLLECTED 集合（只含 10 个词），
+   * 与真实进度无关 —— 答完「动物」那一关，动物词仍然锁着，家长会以为白学了。
+   * 现在按 unitZh 对照已完成的单元名，答完一关词卡就真的解锁。
+   */
+  getWords: async (): Promise<WordsResponse> => {
+    const doneTitles = doneUnitTitles();
+    const items = mockWords.map((w) => ({
+      ...w,
+      collected: doneTitles.has(w.unitZh),
+    }));
+    return {
+      items,
+      total: items.length,
+      collectedCount: items.filter((w) => w.collected).length,
+    };
+  },
 
-  getReadings: async (): Promise<ReadingsResponse> => ({
-    items: mockReadings,
-    total: mockReadings.length,
-  }),
+  getReadings: async (): Promise<ReadingsResponse> => {
+    // 读物进度也读本地记录，读完的页数会保留
+    const prog = getReadingProgress();
+    const items = mockReadings.map((b) => {
+      const read = prog[b.id] ?? b.readPages;
+      return { ...b, readPages: Math.min(read, b.pages.length) };
+    });
+    return { items, total: items.length };
+  },
 
   getReview: async (): Promise<ReviewResponse> => ({
     // dueDays 越大越先复习
