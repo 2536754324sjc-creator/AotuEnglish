@@ -46,7 +46,7 @@ const plans: Plan[] = [
       '复习与词卡',
     ],
     cta: '开始订阅',
-    ctaHref: '/signup',
+    ctaHref: '/login?mode=signup',
   },
   {
     id: 'family-plus',
@@ -62,7 +62,7 @@ const plans: Plan[] = [
       '优先客服',
     ],
     cta: '开始订阅',
-    ctaHref: '/signup',
+    ctaHref: '/login?mode=signup',
   },
 ];
 

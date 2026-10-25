@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconSprite } from '@/components/icon-sprite';
-import type { Unit } from '@/lib/types';
+import type { AnswerReport, Unit } from '@/lib/types';
 import { useAnswerMachine } from '@/features/learn/use-answer-machine';
 import { PictureChoice } from '@/features/learn/picture-choice';
 import { TapCard } from '@/features/learn/tap-card';
@@ -17,8 +17,13 @@ const t = getDict('zh');
 
 type Props = {
   unit: Unit;
-  /** 答完全部题目后触发，由调用方决定去哪 */
-  onFinish: (stars: number) => void;
+  /**
+   * 答完全部题目后触发，由调用方决定去哪。
+   *
+   * 第二个参数是上报载荷（契约 §4.6）：页面若需要落库就把它提交，
+   * 星星也从服务端结果拿。`stars` 只是本地折算值，仅用于体验课这类不落库的场景。
+   */
+  onFinish: (stars: number, report: AnswerReport) => void;
   /** 点关闭按钮时触发，由调用方决定去哪 */
   onExit: () => void;
   /** 退出确认弹层的自定义文案（体验课里「进度不保留」的说法不同） */
@@ -33,14 +38,25 @@ export function UnitPlayer({ unit, onFinish, onExit, exitCopy }: Props) {
   const [quitOpen, setQuitOpen] = useState(false);
   const machine = useAnswerMachine(unit);
 
-  const handleFinish = useCallback(() => onFinish(machine.stars), [onFinish, machine.stars]);
+  const handleFinish = useCallback(
+    () => onFinish(machine.stars, machine.getReport()),
+    [onFinish, machine.stars, machine.getReport],
+  );
 
-  // 答完全部题后自动进下一步，给学习者明确的「完成」感
+  // 答完全部题后自动进下一步，给学习者明确的「完成」感。
+  // 兜底按钮与这个定时器都可能触发，用 ref 保证只上报一次（契约要求防重复提交）。
+  const reported = useRef(false);
+  const finishOnce = useCallback(() => {
+    if (reported.current) return;
+    reported.current = true;
+    handleFinish();
+  }, [handleFinish]);
+
   useEffect(() => {
     if (!machine.state.finished) return;
-    const id = window.setTimeout(handleFinish, 700);
+    const id = window.setTimeout(finishOnce, 700);
     return () => window.clearTimeout(id);
-  }, [machine.state.finished, handleFinish]);
+  }, [machine.state.finished, finishOnce]);
 
   const q = machine.question;
   const progressPct = (machine.state.index / machine.total) * 100;
@@ -172,7 +188,7 @@ export function UnitPlayer({ unit, onFinish, onExit, exitCopy }: Props) {
           <button
             type="button"
             className={styles.primary}
-            onClick={machine.state.finished ? handleFinish : machine.next}
+            onClick={machine.state.finished ? finishOnce : machine.next}
           >
             {machine.state.finished ? '完成' : t.common.next}
           </button>

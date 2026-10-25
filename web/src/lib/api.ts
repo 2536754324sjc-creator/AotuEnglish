@@ -1,4 +1,5 @@
 import type { Course, ReportRow, TodayProgress, Unit, WeeklyReport } from './types';
+import { getToken } from './auth';
 import { mockCourses, mockReportRows, mockTodayProgress, mockWeeklyReport } from './mock-data';
 import { sampleUnits } from './mock-data';
 import { demoUnits } from './demo-units';
@@ -62,8 +63,10 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  // token 只在浏览器里有；SSR 阶段不带头，避免把 undefined 发出去
-  const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
+  // token 只在浏览器里有；SSR 阶段不带头，避免把 undefined 发出去。
+  // 存储键必须与 `lib/auth.ts` 的 TOKEN_KEY 保持一致 —— 早期这里写的是 'token'，
+  // 而 auth.ts 写 'aotu.token'，导致登录后请求从不带 token（后端一接就暴露）。
+  const token = typeof window !== 'undefined' ? getToken() : null;
 
   let res: Response;
   try {

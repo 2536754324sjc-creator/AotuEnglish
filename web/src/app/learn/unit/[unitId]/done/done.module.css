@@ -85,6 +85,14 @@
   color: var(--ink-2);
 }
 
+/* 星总数（来自服务端），比主文案弱一级 */
+.total {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
 .actions {
   margin-top: 30px;
   display: flex;
@@ -129,6 +137,14 @@
 
 .ghost:hover {
   background: #f4f8fd;
+}
+
+/* 「再玩一次」在过期视图里用 Link 渲染，需要撑起和按钮一致的可点击区域 */
+a.ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 @media (max-width: 720px) {

@@ -40,7 +40,8 @@ function LoginForm() {
   const search = useSearchParams();
   // 登录成功后回到用户原本想去的页面（路由守卫会带 ?next= 过来）
   const next = search.get('next');
-  const [mode, setMode] = useState<Mode>('login');
+  // 价格页等外部入口用 ?mode=signup 直达注册；非法值一律回落到登录
+  const [mode, setMode] = useState<Mode>(search.get('mode') === 'signup' ? 'signup' : 'login');
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
   const [form] = Form.useForm<Fields>();

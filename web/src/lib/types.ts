@@ -26,6 +26,41 @@ export type Question = {
   options: Option[];
 };
 
+/* ---------------- 作答上报（契约 §4.6） ---------------- */
+
+/** 上报前收集的答案；elapsedMs 为 -1 表示该题耗时未知（不参与统计） */
+export type CollectedAnswer = {
+  questionId: string;
+  correct: boolean;
+  /** 试了几次才答对 —— 周报「薄弱项」靠它算 */
+  attempts: number;
+  elapsedMs: number;
+};
+
+/** 答题机在整关结束时给出的提交载荷（时间由答题机自己记） */
+export type AnswerReport = {
+  startedAt: string;
+  finishedAt: string;
+  answers: CollectedAnswer[];
+};
+
+/**
+ * 结算页通过 history.state 收到的接力数据。
+ *
+ * 为什么不复用 `?stars=`：星星必须来自服务端（契约 §4.6），
+ * 而 URL 参数是客户端可改的；服务端结果放这里，刷新后自然失效，
+ * 刷新过的结算页会回落到「只读视图」而不是显示一个编出来的分数。
+ */
+export type DoneHandoff = {
+  stars: number;
+  starTotal?: number;
+  nextUnitId?: string | null;
+  /** 上报失败时的原因，用来决定是否显示「这次没存上」 */
+  submitError?: boolean;
+  /** 体验课等不落库的场景 */
+  trial?: boolean;
+};
+
 export type UnitStatus = 'done' | 'current' | 'locked';
 
 export type Unit = {

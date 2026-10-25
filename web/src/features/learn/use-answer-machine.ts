@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useMemo, useReducer } from 'react';
-import type { Question, Unit } from '@/lib/types';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import type { AnswerReport, Question, Unit } from '@/lib/types';
+import { buildAnswerReport } from '@/lib/answer-report';
 
 /**
  * 答题状态机 —— 与界面解耦，纯逻辑。
@@ -123,6 +124,21 @@ export function useAnswerMachine(unit: Unit) {
 
   const question: Question | undefined = unit.questions[state.index];
 
+  /* ---------- 上报用的计时与尝试次数（契约 §4.6） ---------- */
+
+  // 每题的最终尝试次数与耗时，按题目索引存
+  const attemptsByIndex = useRef<number[]>([]);
+  const elapsedByIndex = useRef<number[]>([]);
+  // 整关开始时间（保持 mount 时的值，跨轮次不变）
+  const startedAtRef = useRef<string>(new Date().toISOString());
+  // 当前题开始计时的时间戳；切换题目时重置
+  const questionStartRef = useRef<number>(Date.now());
+
+  // 换题时结算上一题的耗时，并给新题重新开始计时
+  useEffect(() => {
+    questionStartRef.current = Date.now();
+  }, [state.index]);
+
   const select = useCallback((optionId: string) => dispatch({ type: 'select', optionId }), []);
   const check = useCallback(() => dispatch({ type: 'check' }), []);
   const next = useCallback(() => dispatch({ type: 'next' }), []);
@@ -138,6 +154,33 @@ export function useAnswerMachine(unit: Unit) {
     return 1;
   }, [state.firstTryCount, unit.questions.length]);
 
+  // 题目作答完成时落一次快照：答对的那次 reducer 的 attempts 就是最终值
+  useEffect(() => {
+    if (state.phase !== 'correct') return;
+    const i = state.index;
+    attemptsByIndex.current[i] = state.attempts;
+    elapsedByIndex.current[i] = Math.max(0, Date.now() - questionStartRef.current);
+  }, [state.phase, state.index, state.attempts]);
+
+  /**
+   * 生成整关的上报载荷。
+   *
+   * 只用 ref 里的快照，不依赖 state —— 调用时机在「最后一题答对之后」，
+   * 此时 reducer 早已把该题写进 results，快照也已经落好。
+   * 没走到 / 没答完的题按 attempts=0、correct=false 提交，服务端据此判未完成。
+   */
+  const getReport = useCallback(
+    (): AnswerReport =>
+      buildAnswerReport(
+        unit,
+        attemptsByIndex.current,
+        elapsedByIndex.current,
+        startedAtRef.current,
+        new Date().toISOString(),
+      ),
+    [unit],
+  );
+
   /** 结算是「一次答对」之后才允许，避免误判 */
   const canCheck = state.phase === 'asking' && state.selected !== null;
   const showRetryHint = state.retrying;
@@ -150,6 +193,7 @@ export function useAnswerMachine(unit: Unit) {
     canCheck,
     showRetryHint,
     stars,
+    getReport,
     select,
     check,
     next,

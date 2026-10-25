@@ -1,4 +1,4 @@
-﻿# 依赖与构建产物（可重新生成，不进仓库）
+# 依赖与构建产物（可重新生成，不进仓库）
 node_modules/
 .next/
 out/
@@ -37,6 +37,7 @@ Thumbs.db
 web/.devserver.log
 web/.devserver.err.log
 web/verify-*.cjs
+web/verify-*.mts
 
 push-retry.ps1
 # 图卡图片：由 scripts/gen-card-images.mjs 生成，不进仓库

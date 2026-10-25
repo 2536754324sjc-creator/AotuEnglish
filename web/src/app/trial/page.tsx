@@ -26,6 +26,7 @@ export default function TrialPage() {
   const { data, loading } = useApi(() => api.getUnit(TRIAL_UNIT_ID), []);
   const unit = data?.unit ?? null;
 
+  // 体验课刻意不落库（不用注册），只取本地折算的星星
   const handleFinish = useCallback((s: number) => {
     setStars(s);
     setPhase('done');
