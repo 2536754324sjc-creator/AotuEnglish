@@ -141,11 +141,32 @@ DATABASE_URL="file:./dev.db"
 | 现象 | 原因 | 解决 |
 | --- | --- | --- |
 | 构建失败：找不到 `prisma` | `postinstall` 没跑 | 确认 Root Directory 是 `web` |
+| 构建失败：Node 版本不被支持 | 未声明 engines | 已声明 `engines.node >= 24`，若仍失败检查 Vercel 项目设置里的 Node 版本 |
 | 页面打开但注册报 500 | 数据库表没建 | 执行第 4 步 `migrate deploy` |
 | `Can't reach database server` | 连接串缺 `sslmode=require` | 补上参数 |
+| `self-signed certificate` | 自建库用自签证书 | 连接串加 `?sslmode=no-verify`（明确表达意图），**不要**改代码 |
 | 登录后刷新掉登录态 | `NEXT_PUBLIC_API_MODE` 还是 mock | 改成 `live` 后 Redeploy |
-| 字体显示不统一 | 构建时字体子集没生成 | 需要 Python + fonttools；缺了也不影响功能 |
+| 字体显示不统一 | 构建时字体子集没生成 | Vercel 没有 Python，字体会用系统字体回退；**不影响功能**，见下方说明 |
+| 健康检查 `db` 显示 `sqlite` | `DATABASE_URL` 没生效 | 检查环境变量是否加到了正确的环境（Production） |
 | 图片/音频 404 | 静态资源没提交 | 确认 `public/` 已进仓库 |
+
+### 关于 Vercel 构建与字体子集
+
+`npm run build` 会先跑 `scripts/ensure-fonts.mjs`，它需要 Python + fonttools 才能重建字体子集。
+
+**Vercel 的构建环境没有 Python**，所以这一步会打印警告并跳过：
+实际表现是「字体子集不重建，新文案里的生僻字回退到系统字体」。
+
+- **不影响功能**，不影响布局，只是字形与其他字略不统一
+- 想彻底解决：本地跑一次 `npm run build`（会重建子集），
+  把更新后的 `public/fonts/*.woff2` 提交，Vercel 上就无需重建
+- 已实测：伪造「字符集变化」并移除 python 后，脚本退出码仍为 0，**不会阻断构建**
+
+### 关于静态资源体积
+
+`public/` 约 9.9 MB（229 张图卡 + 115 个音频 + 字体），远低于 Vercel 免费层限制，
+不需要拆分或上 CDN。
+
 
 ---
 
