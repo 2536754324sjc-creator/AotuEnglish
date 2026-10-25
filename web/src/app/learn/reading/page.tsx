@@ -8,7 +8,6 @@ import { PageError, PageLoading } from '@/components/page-states';
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import { speak as speakText, stopSpeaking } from '@/lib/speak';
-import { saveReadingPage } from '@/lib/progress-store';
 import { splitSentence } from '@/lib/reading';
 import type { ReadingBook } from '@/lib/mock-readings';
 import styles from './reading.module.css';
@@ -156,9 +155,10 @@ function Reader({ book, onClose }: { book: ReadingBook; onClose: () => void }) {
   const isLast = index === book.pages.length - 1;
 
   // 每翻到一页就记下进度（只前进不后退），关闭阅读器后书架会刷新出新的进度条。
-  // 之前 readPages 是写死的静态值，读完也不回写 —— 见 HANDOFF §三 第 9 项。
+  // 走 api 层而不是直接写 localStorage：live 模式下进度要同步到服务端，
+  // 否则换设备/换浏览器就读不到自己读到哪了。
   useEffect(() => {
-    saveReadingPage(book.id, index + 1);
+    void api.saveReadingProgress(book.id, index + 1);
   }, [book.id, index]);
 
   // 卸载时停掉声音并清掉动画定时器，避免在已卸载组件上 setState

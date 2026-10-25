@@ -48,7 +48,15 @@ export async function GET(req: Request) {
     orderBy: { createdAt: 'asc' },
   });
 
-  return NextResponse.json({ items: list.map(toDto) });
+  /**
+   * 直接返回数组，不要包成 { items }。
+   *
+   * 为什么：前端 `api.getLearners()` 的返回类型是 `Learner[]`，
+   * mock 实现也返回数组。早期这里返回 `{ items: [...] }`，
+   * 线上表现为「学习者」页面直接崩溃（`s.map is not a function`）。
+   * 契约以**前端类型**为准，后端适配它，而不是反过来。
+   */
+  return NextResponse.json(list.map(toDto));
 }
 
 export async function PUT(req: Request) {
@@ -160,5 +168,6 @@ export async function PUT(req: Request) {
     orderBy: { createdAt: 'asc' },
   });
 
-  return NextResponse.json({ items: list.map(toDto) });
+  // 与 GET 保持一致：返回数组而非 { items }，见 GET 处的说明
+  return NextResponse.json(list.map(toDto));
 }

@@ -117,7 +117,8 @@ function LoginForm() {
           {serverError && (
             <Alert
               type="error"
-              message={serverError}
+              // AntD 6 起 `message` 已废弃，改用 `title`
+              title={serverError}
               showIcon
               className={styles.alert}
               closable

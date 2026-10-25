@@ -1,6 +1,12 @@
 import type { Course, ReportRow, TodayProgress, Unit, WeeklyReport } from './types';
 import { getToken } from './auth';
-import { applyDoneUnits, getDoneUnits, markUnitDone, getReadingProgress } from './progress-store';
+import {
+  applyDoneUnits,
+  getDoneUnits,
+  markUnitDone,
+  getReadingProgress,
+  saveReadingPage as saveReadingPageLocal,
+} from './progress-store';
 import { mockCourses, mockReportRows, mockTodayProgress, mockWeeklyReport } from './mock-data';
 import { sampleUnits } from './mock-data';
 import { demoUnits } from './demo-units';
@@ -198,6 +204,40 @@ function doneUnitTitles(): Set<string> {
     if (done.has(u.unitId)) titles.add(u.titleZh);
   }
   return titles;
+}
+
+/* ---------------- 读物的 live 实现 ---------------- */
+
+/**
+ * live 模式下的读物书架 = 前端本地书目 + 服务端记录的进度。
+ *
+ * 为什么不在服务端返回完整书目：
+ * 每本书的正文、插图、译文都是**内容**，随前端代码一起发布；
+ * 服务端只需负责属于**学习者**的那部分（读到第几页）。
+ * 若服务端也维护一份书目，改一次文案要改两处，必然出现过期数据
+ * ——这正是之前 `/readings` 返回 404 时暴露的问题：
+ * 前端请求 `/readings`，而服务端只有 `/users/me/readings`（只给进度）。
+ *
+ * 现在的分工：
+ *   GET /users/me/readings  -> { progress: { [readingId]: readPages } }
+ *   前端把 progress 合并进本地书目
+ */
+async function liveReadings(): Promise<ReadingsResponse> {
+  let progress: Record<string, number> = {};
+  try {
+    const res = await request<{ progress: Record<string, number> }>('/users/me/readings');
+    progress = res.progress ?? {};
+  } catch {
+    // 进度读不到不应让整个书架打不开：退化成「全部未读」
+    progress = {};
+  }
+
+  const items = mockReadings.map((b) => {
+    const read = progress[b.id] ?? b.readPages;
+    return { ...b, readPages: Math.min(read, b.pages.length) };
+  });
+
+  return { items, total: items.length };
 }
 
 const mockApi = {
@@ -440,7 +480,8 @@ export const api = {
   },
 
   getReadings(): Promise<ReadingsResponse> {
-    return MODE === 'mock' ? mockApi.getReadings() : request<ReadingsResponse>('/readings');
+    if (MODE === 'mock') return mockApi.getReadings();
+    return liveReadings();
   },
 
   getReview(): Promise<ReviewResponse> {
@@ -451,6 +492,26 @@ export const api = {
     return MODE === 'mock'
       ? mockApi.getRewards()
       : request<RewardsResponse>('/users/me/rewards');
+  },
+
+  /**
+   * 记录读物读到第几页。
+   *
+   * mock：写 localStorage（见 progress-store）
+   * live：写服务端（只前进不后退由服务端保证）
+   *
+   * 为什么两种模式都写本地：live 模式下如果网络抖动，
+   * 本地这份记录能让用户下次打开时至少看到自己读到哪了。
+   */
+  saveReadingProgress(readingId: string, readPages: number): Promise<void> {
+    saveReadingPageLocal(readingId, readPages);
+    if (MODE === 'mock') return Promise.resolve();
+    return request<{ readingId: string; readPages: number }>('/users/me/readings', {
+      method: 'PUT',
+      body: JSON.stringify({ readingId, readPages }),
+    })
+      .then(() => undefined)
+      .catch(() => undefined); // 上报失败不打断阅读
   },
 
   getWeeklyReport(week?: string): Promise<WeeklyReportResponse> {
