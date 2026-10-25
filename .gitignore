@@ -50,3 +50,16 @@ web/scripts/*.local
 web/public/cards/_test-*.jpg
 
 web/gen-log.txt
+
+# 本地数据库（含测试数据，绝不提交；线上用环境变量连 PostgreSQL）
+web/dev.db
+web/dev.db-journal
+web/dev.db-wal
+web/dev.db-shm
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Prisma 生成的客户端（由 `npx prisma generate` 重建，build 前会自动生成）
+web/src/generated/

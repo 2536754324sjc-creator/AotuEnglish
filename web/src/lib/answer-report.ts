@@ -17,14 +17,18 @@ export function buildAnswerReport(
   elapsedByIndex: readonly number[],
   startedAt: string,
   finishedAt: string,
+  optionsByIndex: readonly string[] = [],
 ): AnswerReport {
   const answers: CollectedAnswer[] = unit.questions.map((q, i) => {
     const attempts = attemptsByIndex[i] ?? 0;
     return {
       questionId: q.id,
+      // 客户端仍上报自己的判断，服务端**不采信**（以 optionId 重新判分），
+      // 保留它是为了在日志里比对「客户端认为的对错」与「服务端判定的对错」
       correct: attempts > 0,
       attempts,
       elapsedMs: elapsedByIndex[i] ?? -1,
+      optionId: optionsByIndex[i],
     };
   });
 

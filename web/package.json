@@ -5,33 +5,44 @@
   "description": "AotuEnglish 英语学习网站 — 营销页 SSR，学习端与监护端客户端渲染",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/ensure-fonts.mjs && next build",
+    "build": "prisma generate && node scripts/ensure-fonts.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "fonts": "node scripts/update-fonts.mjs",
-    "fonts:check": "python scripts/check-fonts.py"
+    "fonts:check": "python scripts/check-fonts.py",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.7",
-    "@ant-design/nextjs-registry": "^1.1.0",
     "@ant-design/icons": "^6.3.4",
+    "@ant-design/nextjs-registry": "^1.1.0",
     "@fontsource-variable/baloo-2": "^5.3.0",
-    "@fontsource/zcool-kuaile": "^5.3.0",
     "@fontsource/noto-sans-sc": "^5.3.1",
+    "@fontsource/zcool-kuaile": "^5.3.0",
     "@gsap/react": "^2.1.2",
+    "@prisma/adapter-better-sqlite3": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "antd": "^6.6.6",
+    "bcryptjs": "^3.0.3",
     "gsap": "^3.13.0",
     "lenis": "^1.3.27",
     "next": "16.4.2",
+    "prisma": "^7.10.1",
     "pts": "^1.0.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "dotenv": "^18.0.9",
+    "puppeteer-core": "^25.16.0",
     "typescript": "^5.9.3"
   }
 }

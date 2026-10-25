@@ -35,6 +35,8 @@ export type CollectedAnswer = {
   /** 试了几次才答对 —— 周报「薄弱项」靠它算 */
   attempts: number;
   elapsedMs: number;
+  /** 最终选中的选项 id —— 服务端据此判分（契约 §10 第 5 条） */
+  optionId?: string;
 };
 
 /** 答题机在整关结束时给出的提交载荷（时间由答题机自己记） */

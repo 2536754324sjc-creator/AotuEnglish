@@ -510,6 +510,25 @@ export const api = {
   getAccount(): Promise<AccountOverview> {
     return MODE === 'mock' ? mockApi.getAccount() : request<AccountOverview>('/users/me/account');
   },
+
+  /**
+   * 单题判分（服务端判分模式的必需接口）。
+   *
+   * live 模式下单元不含答案，答题机必须问服务端。
+   * mock 模式返回 null 表示「自己判」，由答题机用本地的 correct 字段。
+   */
+  checkAnswer(unitId: string, questionId: string, optionId: string): Promise<{ correct: boolean } | null> {
+    if (MODE === 'mock') return Promise.resolve(null);
+    return request<{ correct: boolean }>(`/units/${encodeURIComponent(unitId)}/check`, {
+      method: 'POST',
+      body: JSON.stringify({ questionId, optionId }),
+    });
+  },
+
+  /** 当前是否为服务端判分模式 */
+  get isServerGrading(): boolean {
+    return MODE === 'live';
+  },
 };
 
 /** 当前模式，调试用 */
