@@ -38,6 +38,9 @@ web/.devserver.log
 web/.devserver.err.log
 web/verify-*.cjs
 web/diag-*.cjs
+
+# 本地监控日志
+web/.monitor/
 web/verify-*.mts
 
 push-retry.ps1

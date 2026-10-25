@@ -47,6 +47,40 @@ GET https://你的域名/api/health
 
 ---
 
+## 2.1 本地监控（不依赖第三方账号，已可用）
+
+如果暂时不想注册 UptimeRobot，仓库里有一个可直接跑的本地监控：
+
+```bash
+cd web
+npm run monitor -- https://aotuenglish.vercel.app
+# 或指定间隔（秒）与响铃告警
+npm run monitor -- https://aotuenglish.vercel.app --interval 300 --beep
+```
+
+**行为**：
+
+- 默认每 5 分钟探测一次 `/api/health`
+- **连续 2 次失败才告警**（避免 Neon 冷启动的单次超时误报）
+- 状态变化时输出一行，日志写到 `web/.monitor/health.log`（已 gitignore）
+- 恢复时也会输出 `UP`，便于确认
+
+**实测输出**：
+
+```
+[2026-10-25T11:44:58Z] UP https://aotuenglish.vercel.app/api/health (3517ms, db=postgresql)
+```
+
+**局限（重要）**：它只在你本机运行，**关机就停止监控**。
+要 7×24 监控仍需 UptimeRobot 这类外部服务。
+
+**Windows 上的一个细节**：本机 Node 的 `fetch`/`https` 连该域名会
+`ETIMEDOUT`（实测 `208.101.60.87:443` 超时），而 PowerShell 能正常访问。
+所以脚本在 Windows 上改用 PowerShell 探测，其它平台用 `fetch`。
+这不是站点问题，是本机网络环境对 Node 的限制。
+
+---
+
 ## 3. 错误上报（可选，后期再做）
 
 当前靠 **Vercel 自带的运行日志**（Dashboard → Logs）就能定位问题，含：
