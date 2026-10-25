@@ -1,33 +1,59 @@
-# 停止本项目所有 next dev 进程并释放端口
+# Stop all dev/start servers for this project and free the ports.
 #
-# 为什么需要：旧的 next dev 进程不退出会让新实例换到 3001/3002，
-# 于是自动化测试打到的是旧代码，结论完全不可信（踩过好几次）。
+# Why: a stale server keeps port 3000 occupied, so a new instance starts on
+# 3001/3002 and automated tests silently hit the OLD code. That has caused
+# wrong conclusions more than once.
 #
-# 用法：powershell -NoProfile -ExecutionPolicy Bypass -File .\stop-dev.ps1
-# （这台机器没有 pwsh，只有 Windows PowerShell 5.1，所以用 powershell 调用）
+# Also: `next dev` spawns a child server (start-server.js). Killing only the
+# child leaves the parent alive, and the parent immediately restarts it.
+# So we kill the whole process tree by parent, not just the port owner.
+#
+# Usage: powershell -NoProfile -ExecutionPolicy Bypass -File .\stop-dev.ps1
+# Note: this machine has no pwsh, only Windows PowerShell 5.1.
+# Keep this file ASCII-only: PS 5.1 reads scripts as ANSI, and non-ASCII
+# characters in comments have broken the parser before.
+
 $ports = @(3000, 3001, 3002, 3003)
+$targets = @()
 
-# 1) 先结束所有指向本项目的 node 进程（按命令行匹配，避免误杀其它 node）
-$procs = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" -ErrorAction SilentlyContinue |
-  Where-Object { $_.CommandLine -and $_.CommandLine -match 'AotuEnglish' -and $_.CommandLine -match 'next' }
-
-foreach ($p in $procs) {
-  try {
-    Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop
-    Write-Output "stopped pid $($p.ProcessId)"
-  } catch {
-    Write-Output "failed pid $($p.ProcessId): $($_.Exception.Message)"
+# 1) Any node process of this repo running next dev / next start / start-server
+$all = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" -ErrorAction SilentlyContinue
+foreach ($p in $all) {
+  $cmd = [string]$p.CommandLine
+  if ($cmd -match 'AotuEnglish' -and $cmd -match 'next') {
+    if ($targets -notcontains $p.ProcessId) { $targets += $p.ProcessId }
   }
 }
 
-# 2) 再兜底按端口清理
+# 2) Whatever currently listens on our ports (and its parent)
 foreach ($port in $ports) {
-  Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue | ForEach-Object {
+  $conns = Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue
+  foreach ($c in $conns) {
+    $procId = $c.OwningProcess
+    if ($procId -and ($targets -notcontains $procId)) {
+      $proc = Get-CimInstance Win32_Process -Filter "ProcessId = $procId" -ErrorAction SilentlyContinue
+      $cmd = ''
+      if ($proc) { $cmd = [string]$proc.CommandLine }
+      if ($cmd -match 'node') {
+        $targets += $procId
+        if ($proc -and $proc.ParentProcessId -and ($targets -notcontains $proc.ParentProcessId)) {
+          $targets += $proc.ParentProcessId
+        }
+      }
+    }
+  }
+}
+
+if ($targets.Count -eq 0) {
+  Write-Output 'no node servers found'
+} else {
+  # NOTE: do not name a loop variable $id (reserved/automatic in PowerShell).
+  foreach ($pidToKill in $targets) {
     try {
-      Stop-Process -Id $_.OwningProcess -Force -ErrorAction Stop
-      Write-Output "stopped pid $($_.OwningProcess) on port $port"
+      Stop-Process -Id $pidToKill -Force -ErrorAction Stop
+      Write-Output "stopped pid $pidToKill"
     } catch {
-      Write-Output "failed port $port pid $($_.OwningProcess)"
+      Write-Output "FAILED pid $pidToKill : $($_.Exception.Message)"
     }
   }
 }
@@ -36,8 +62,10 @@ Start-Sleep -Seconds 2
 
 $still = Get-NetTCPConnection -State Listen -LocalPort $ports -ErrorAction SilentlyContinue
 if ($still) {
-  Write-Output "STILL_BUSY"
-  $still | Select-Object LocalPort, OwningProcess | Format-Table -AutoSize
-} else {
-  Write-Output "ALL_FREE"
+  Write-Output 'STILL_BUSY'
+  $still | Select-Object LocalPort, OwningProcess | Format-Table -AutoSize | Out-String
+  exit 1
 }
+
+Write-Output 'ALL_FREE'
+exit 0

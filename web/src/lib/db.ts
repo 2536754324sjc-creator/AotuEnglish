@@ -49,19 +49,23 @@ const globalForPrisma = globalThis as unknown as {
 
 function createClient(): DatabaseClient {
   if (isPostgresUrl(DATABASE_URL)) {
-    const needsSsl =
-      /sslmode=(require|verify-ca|verify-full)/i.test(DATABASE_URL) ||
-      /neon\.tech|supabase\.co|render\.com/i.test(DATABASE_URL);
-
     // 延迟 require：SQLite 环境下不加载 pg，避免无谓的模块初始化
     const { PrismaClient: PgClient } = require('../../prisma/generated-pg/client') as {
       PrismaClient: new (opts: unknown) => DatabaseClient;
     };
 
-    const adapter = new PrismaPg({
-      connectionString: DATABASE_URL,
-      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
-    });
+    /**
+     * 不要再额外传 `ssl: { rejectUnauthorized: false }`。
+     *
+     * 实测（pg-connection-string）：连接串里的 `sslmode=require` 已经会被
+     * 当成 `verify-full` 处理，即**校验证书**——这是正确且安全的行为。
+     * 而显式传 ssl 对象会覆盖连接串，把校验关掉，等于主动降级。
+     *
+     * Neon / Supabase 使用有效 CA 证书，不需要跳过校验；
+     * 若某个自建库用自签证书导致连不上，应通过
+     * `?sslmode=no-verify`（明确表达意图）或配置 CA，而不是在这里全局放宽。
+     */
+    const adapter = new PrismaPg({ connectionString: DATABASE_URL });
 
     return new PgClient({
       adapter,
