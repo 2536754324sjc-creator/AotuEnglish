@@ -114,6 +114,19 @@ export async function submitSession(params: {
 
   const stars = computeStars(results, unit.questions.length);
 
+  /**
+   * 事务超时必须显式放宽。
+   *
+   * 线上实测（Vercel + Neon）：默认 5 秒不够用 ——
+   * 免费层冷启动 + 跨区域往返，一次提交出现过 "5340 ms passed since the start"
+   * 而直接失败，用户看到「这次成绩可能没存上」。
+   *
+   * 为什么设 20 秒：本事务内最多约 20 条语句（1 条 session + 1 条 progress
+   * + 6 条词卡 upsert + 最多 6 条复习 upsert），Neon 冷启动时每条几十毫秒，
+   * 留足余量。超时太长也不好：连接被占住会拖慢其他人。
+   *
+   * 本地 SQLite 下这个值几乎无意义（毫秒级完成），所以只影响线上表现。
+   */
   return prisma.$transaction(async (tx) => {
     const session = await tx.studySession.create({
       data: {
@@ -184,7 +197,7 @@ export async function submitSession(params: {
       unitStatus: 'done' as const,
       nextUnitId: nextUnitId(unitId),
     };
-  });
+  }, { timeout: 20_000 });
 }
 
 function nextUnitId(unitId: string): string | null {

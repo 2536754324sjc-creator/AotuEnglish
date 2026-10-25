@@ -161,7 +161,7 @@ export async function PUT(req: Request) {
         });
       }
     }
-  });
+  }, { timeout: 20_000 });
 
   const list = await prisma.learner.findMany({
     where: { userId: user.id },
