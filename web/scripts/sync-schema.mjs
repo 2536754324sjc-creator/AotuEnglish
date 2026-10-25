@@ -2,14 +2,19 @@
 /**
  * 同步两份 schema（SQLite / PostgreSQL）。
  *
- * 为什么需要：Prisma 的 datasource.provider 是编译期常量，
- * 无法用同一份 schema 同时支持 sqlite 与 postgresql。
- * 两份文件只允许在 provider 那一行不同 —— 其它任何差异都会导致
- * 「本地跑得通、线上报字段不存在」这类难查的问题。
+ * 为什么需要两份：Prisma 的 datasource.provider 与生成的 Client 都是**编译期绑定**的，
+ * 同一个 Client 无法在运行时切换数据库类型
+ * （实测报错：Driver Adapter @prisma/adapter-pg is not compatible with provider sqlite）。
+ * 所以必须生成两套 Client，运行时按连接串选择。
+ *
+ * 两份文件的差异**只允许两处**：
+ *   1. datasource.provider  sqlite / postgresql
+ *   2. generator.output     各自独立的生成目录
+ * 其它任何差异都会导致「本地跑得通、线上报错」这类难查的问题。
  *
  * 用法：
  *   node scripts/sync-schema.mjs          以 schema.prisma 为准重新生成 PG 版
- *   node scripts/sync-schema.mjs --check  只检查是否一致（CI 用）
+ *   node scripts/sync-schema.mjs --check  只检查是否一致（CI / build 用）
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -22,14 +27,27 @@ const PG = join(ROOT, 'prisma', 'schema.postgres.prisma');
 
 const PROVIDER_SQLITE = 'provider = "sqlite"';
 const PROVIDER_PG = 'provider = "postgresql"';
+const OUTPUT_SQLITE = 'output   = "../prisma/generated"';
+const OUTPUT_PG = 'output   = "../prisma/generated-pg"';
 
 const base = readFileSync(SQLITE, 'utf8');
-if (!base.includes(PROVIDER_SQLITE)) {
-  console.error(`✗ ${SQLITE} 里找不到 ${PROVIDER_SQLITE}`);
-  process.exit(1);
+
+for (const [needle, label] of [
+  [PROVIDER_SQLITE, 'datasource provider "sqlite"'],
+  [OUTPUT_SQLITE, `generator output ${OUTPUT_SQLITE}`],
+]) {
+  if (!base.includes(needle)) {
+    console.error(`✗ schema.prisma 里找不到 ${label}`);
+    process.exit(1);
+  }
 }
 
-const expected = base.replace(PROVIDER_SQLITE, PROVIDER_PG);
+/** 由 SQLite 版派生出 PostgreSQL 版 */
+function derive(src) {
+  return src.replace(PROVIDER_SQLITE, PROVIDER_PG).replace(OUTPUT_SQLITE, OUTPUT_PG);
+}
+
+const expected = derive(base);
 
 if (process.argv.includes('--check')) {
   let actual = '';
@@ -41,7 +59,7 @@ if (process.argv.includes('--check')) {
   }
   if (actual.trim() !== expected.trim()) {
     console.error('✗ 两份 schema 不一致，请运行 npm run schema:sync');
-    console.error('  （只允许 provider 一行不同）');
+    console.error('  （只允许 provider 与 generator.output 不同）');
     process.exit(1);
   }
   console.log('✓ 两份 schema 一致');

@@ -99,11 +99,14 @@ DATABASE_URL="file:./dev.db"
 
 | 检查 | 地址 | 期望 |
 | --- | --- | --- |
-| 健康检查 | `https://你的域名/api/health` | `{"ok":true,"users":0,...}` |
+| 健康检查 | `https://你的域名/api/health` | `{"ok":true,"db":"postgresql",...}` |
 | 首页 | `https://你的域名/` | 正常渲染 |
 | 注册 | `https://你的域名/login?mode=signup` | 能建号并进入 `/learn` |
 | 学习 | 进 `/learn` 完成一关 | 结算页显示星星 |
 | 家长端 | `/parent` | 有数据 |
+
+**重点看 `db` 字段**：必须是 `"postgresql"`。
+如果显示 `"sqlite"`，说明 `DATABASE_URL` 没生效，数据会写到临时文件、重启即丢。
 
 **必测的一条**：注销后重新登录，进度还在 —— 这证明数据真的落库了，
 而不是只在浏览器内存里。
@@ -117,8 +120,9 @@ DATABASE_URL="file:./dev.db"
    然后 **Redeploy**（Deployments → 最新 → ⋯ → Redeploy）。
    不设置的话 sitemap.xml 与 canonical 里会是 localhost，影响 SEO。
 
-2. **加一个监控**：用免费的外部检查服务（如 UptimeRobot）每分钟访问
-   `https://你的域名/api/health`，非 200 就发邮件。这是最省事的可用性告警。
+2. **加可用性监控**：用 UptimeRobot 免费版每 5 分钟探测
+   `https://你的域名/api/health`，非 200 就发邮件。
+   详细步骤与告警配置见 [monitoring.md](./monitoring.md)。
 
 ---
 
@@ -152,7 +156,33 @@ Vercel → Deployments → 选上一个成功的版本 → **Promote to Producti
 
 ---
 
-## 10. 上线后下一步（按价值排序）
+## 10. PostgreSQL 兼容性已验证
+
+**不用只靠猜**：上线前已在真实 PostgreSQL 17 上跑过完整验证。
+
+做法：本地起 `postgres:17-alpine` 容器，建独立测试库 `aotu_test`，
+`.env` 指向它，然后执行生产同款命令与全部测试。
+
+| 验证项 | 结果 |
+| --- | --- |
+| `prisma migrate deploy`（生产命令） | ✅ 15 张表全部创建 |
+| 实际列类型 | ✅ `timestamp without time zone`（确认用的是 PG 版 DDL，非 SQLite） |
+| 后端接口测试 | ✅ 36 + 13 + 18 全通过 |
+| 浏览器端到端 | ✅ 18 全通过 |
+
+**这一步抓到过一个会导致线上彻底挂掉的 bug**：
+
+> Prisma 生成的 Client 与 schema 的 `provider` 是**编译期绑定**的。
+> 早期设计用同一个 Client、运行时切换 adapter，会直接报
+> `The Driver Adapter @prisma/adapter-pg is not compatible with the provider sqlite`，
+> 表现为线上所有接口 500。
+
+现在改为**生成两套 Client**（`prisma/generated` 与 `prisma/generated-pg`），
+`src/lib/db.ts` 按连接串选择。`npm run db:generate` 会同时生成两套。
+
+---
+
+## 11. 上线后下一步（按价值排序）
 
 1. **接支付**（你之前要求放到最后）—— 需先定渠道
 2. 跟读打分（需第三方语音测评服务的 Key）
@@ -169,3 +199,23 @@ Vercel → Deployments → 选上一个成功的版本 → **Promote to Producti
 - 本地 `.env` 保持 `DATABASE_URL="file:./dev.db"` + `NEXT_PUBLIC_API_MODE=mock`
 - 线上用 Neon + `live`
 - 两套 schema 由 `npm run schema:sync` 保持同步，`build` 时会自动校验
+- 两套 Client 由 `npm run db:generate` 生成（`build` / `postinstall` 自动执行）
+
+**本地想验证 PG 行为时**（不用改线上环境）：
+
+```bash
+# 起一个本地 PG
+docker run -d --name aotu-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=aotu_test -p 5432:5432 postgres:17-alpine
+
+cd web
+# 临时把 .env 的 DATABASE_URL 换成：
+# postgresql://postgres:postgres@localhost:5432/aotu_test
+npx prisma migrate deploy
+npm run dev
+# 验证完记得换回 file:./dev.db
+```
+
+> GitHub 仓库里还有另一个更老的后端设计（`aotuenglish` 库里有 23 张不同结构的表，
+> 如 `LearnerUnitProgress`、`ReviewAnswer`）。那套与当前 schema 不兼容，
+> **不要**把当前迁移指向那个库，否则会出现同名表冲突。用独立库（如 `aotu_test`）。
+

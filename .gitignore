@@ -71,5 +71,6 @@ web/dev.db-shm
 *.db-wal
 *.db-shm
 
-# Prisma 生成的客户端（由 npx prisma generate 重建，build 前会自动生成）
+# Prisma 生成的客户端（两套：SQLite / PostgreSQL，由 npm run db:generate 重建）
 web/prisma/generated/
+web/prisma/generated-pg/

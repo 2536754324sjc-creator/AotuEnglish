@@ -1,29 +1,28 @@
 import path from 'node:path';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../../prisma/generated/client';
 
 /**
- * Prisma 客户端单例 —— 同时支持 SQLite（本地）与 PostgreSQL（线上）。
+ * 数据库客户端 —— 同时支持 SQLite（本地）与 PostgreSQL（线上）。
  *
- * 为什么要双支持：
- * - 本地开发用 SQLite，零依赖即可跑通
- * - Vercel 是无状态平台，文件型数据库无法持久化，线上必须用 PostgreSQL
- * 两者共用同一份 schema 与业务代码，只有 adapter 不同。
+ * 关键约束（踩过，会导致线上直接 500）：
+ * **Prisma 生成的 Client 与 schema 的 provider 是编译期绑定的**，
+ * 不能用同一个 Client 在运行时切数据库。否则会报：
+ *   "The Driver Adapter `@prisma/adapter-pg` is not compatible with
+ *    the provider `sqlite` specified in the Prisma schema"
  *
- * 怎么选：看 DATABASE_URL 的协议头
- *   file:./dev.db             → SQLite
- *   postgres://... | postgresql://... → PostgreSQL
+ * 所以这里：
+ * - 两套 Client 分别由 schema.prisma / schema.postgres.prisma 生成
+ * - 运行时按 DATABASE_URL 的协议选一套
+ * - 类型层面用 `DatabaseClient` 取并集，业务代码（所有 route）不需要条件分支
  *
- * Prisma 7 的两个坑（都踩过）：
- * 1. schema.prisma 里不能写 url，连接串只在这里给
- * 2. 运行时**必须**传 driver adapter，不存在 datasourceUrl 选项
+ * 本地开发用 SQLite，零依赖；线上（Vercel）用 PostgreSQL，因为无状态平台
+ * 无法持久化数据库文件。
  */
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
 
-function isPostgres(url: string): boolean {
+const DATABASE_URL = process.env.DATABASE_URL ?? 'file:./dev.db';
+
+export function isPostgresUrl(url: string): boolean {
   return /^postgres(ql)?:\/\//i.test(url);
 }
 
@@ -34,21 +33,37 @@ function resolveSqlitePath(url: string): string {
   return path.join(process.cwd(), rel.replace(/^\.\//, ''));
 }
 
-function createClient(): PrismaClient {
-  const url = process.env.DATABASE_URL ?? 'file:./dev.db';
+/**
+ * 两套 Client 的公共类型。
+ *
+ * 为什么这样写：两套 Client 的模型 API 完全一致（同一份 schema 派生），
+ * 差异只在内部 driver。用 SQLite 版作为公共类型即可，
+ * 避免在每个 route 里写 `isPostgres ? ... : ...` 分支。
+ */
+type DatabaseClient = import('../../prisma/generated/client').PrismaClient;
 
-  if (isPostgres(url)) {
-    /**
-     * Neon 等托管 PG 通常要求 SSL。连接串里带 sslmode=require 即可，
-     * 这里显式传 ssl 以兼容不带参数的情况。
-     * rejectUnauthorized: false 是为了兼容 Neon 的证书链（其根证书不在常见信任库里）。
-     */
-    const needsSsl = /sslmode=(require|verify-ca|verify-full)/i.test(url) || /neon\.tech/i.test(url);
+const globalForPrisma = globalThis as unknown as {
+  prisma: DatabaseClient | undefined;
+  prismaUrl: string | undefined;
+};
+
+function createClient(): DatabaseClient {
+  if (isPostgresUrl(DATABASE_URL)) {
+    const needsSsl =
+      /sslmode=(require|verify-ca|verify-full)/i.test(DATABASE_URL) ||
+      /neon\.tech|supabase\.co|render\.com/i.test(DATABASE_URL);
+
+    // 延迟 require：SQLite 环境下不加载 pg，避免无谓的模块初始化
+    const { PrismaClient: PgClient } = require('../../prisma/generated-pg/client') as {
+      PrismaClient: new (opts: unknown) => DatabaseClient;
+    };
+
     const adapter = new PrismaPg({
-      connectionString: url,
+      connectionString: DATABASE_URL,
       ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
     });
-    return new PrismaClient({
+
+    return new PgClient({
       adapter,
       log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
     });
@@ -59,15 +74,40 @@ function createClient(): PrismaClient {
    * 踩过的坑：传 `file:F:/.../dev.db` 时 better-sqlite3 会再按相对路径解析，
    * 最终打开一个空库并报 "table main.User does not exist"。
    */
-  const adapter = new PrismaBetterSqlite3({ url: resolveSqlitePath(url) });
-  return new PrismaClient({
+  const { PrismaClient: SqliteClient } = require('../../prisma/generated/client') as {
+    PrismaClient: new (opts: unknown) => DatabaseClient;
+  };
+
+  const adapter = new PrismaBetterSqlite3({ url: resolveSqlitePath(DATABASE_URL) });
+
+  return new SqliteClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createClient();
+/**
+ * 单例，但要记住用的是哪个连接串。
+ *
+ * 为什么记 url：开发时切换 DATABASE_URL 后热更新会复用 globalThis 上的旧实例，
+ * 导致「明明改了配置却还连着旧库」。连接串变了就重建。
+ */
+function getClient(): DatabaseClient {
+  const cached = globalForPrisma.prisma;
+  if (cached && globalForPrisma.prismaUrl === DATABASE_URL) return cached;
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+  const client = createClient();
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = client;
+    globalForPrisma.prismaUrl = DATABASE_URL;
+  }
+  return client;
 }
+
+export const prisma: DatabaseClient = new Proxy({} as DatabaseClient, {
+  get(_target, prop) {
+    const client = getClient();
+    const value = (client as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+});

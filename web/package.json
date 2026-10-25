@@ -5,18 +5,19 @@
   "description": "AotuEnglish 英语学习网站 — 营销页 SSR，学习端与监护端客户端渲染",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/sync-schema.mjs --check && prisma generate && node scripts/ensure-fonts.mjs && next build",
+    "build": "node scripts/sync-schema.mjs --check && node scripts/gen-prisma.mjs && node scripts/ensure-fonts.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "fonts": "node scripts/update-fonts.mjs",
     "fonts:check": "python scripts/check-fonts.py",
-    "postinstall": "node scripts/sync-schema.mjs && prisma generate",
+    "postinstall": "node scripts/sync-schema.mjs && node scripts/gen-prisma.mjs",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "schema:sync": "node scripts/sync-schema.mjs",
-    "schema:check": "node scripts/sync-schema.mjs --check"
+    "schema:check": "node scripts/sync-schema.mjs --check",
+    "db:generate": "node scripts/gen-prisma.mjs"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.7",

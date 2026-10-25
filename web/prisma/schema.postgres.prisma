@@ -16,7 +16,7 @@ generator client {
    * ERR_ABORTED —— 看起来像页面有 bug，其实只是生成物在抖动。
    * 生成物不是源码，不该进 src。
    */
-  output   = "../prisma/generated"
+  output   = "../prisma/generated-pg"
 }
 
 datasource db {
