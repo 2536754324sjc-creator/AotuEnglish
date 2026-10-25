@@ -1,0 +1,252 @@
+// AotuEnglish 数据库 schema
+//
+// 对齐来源：docs/api-contract.md（13 个接口）与 web/src/lib/types.ts
+// 本地用 SQLite，上线切 PostgreSQL —— 通过 datasource.provider 的 env 控制。
+//
+// 注意：SQLite 不支持原生数组类型，需要列表的地方一律用 JSON 字符串字段（见 *Json 后缀）。
+
+generator client {
+  provider = "prisma-client"
+  /**
+   * 生成目录刻意放在 src/ 之外。
+   *
+   * 踩过的坑：原先输出到 src/generated/prisma 时，`prisma generate` 写入的
+   * 二十多个 .ts 文件会被 Next 的文件监听器捕获，触发连续重编译
+   * （日志里刷满 "Compiled in 1ms"），并让浏览器自动化测试随机报
+   * ERR_ABORTED —— 看起来像页面有 bug，其实只是生成物在抖动。
+   * 生成物不是源码，不该进 src。
+   */
+  output   = "../prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// 用户：家长账号。目前一个账号可以有多个学习者档案。
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  /// bcrypt 哈希，永不存明文
+  passwordHash String
+  name         String
+  role         String   @default("parent") // parent | learner
+  level        String   @default("kids-a") // kids-a | kids-b | teen | adult
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  learners   Learner[]
+  sessions   AuthSession[]
+  preferences UserPreference?
+  account    Account?
+}
+
+/// 登录态。用不透明 token 而不是 JWT：
+/// 可随时失效（改密码 / 登出全部设备），符合契约 §4.1 的「登出与刷新」要求。
+model AuthSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// 学习者档案：进度、作答、周报都挂在它名下。
+model Learner {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  level     String   @default("kids-a")
+  avatar    String   @default("M")
+  birthYear Int?
+  /// 是否为当前学习者（同一用户下只应有一个 true，由应用层保证）
+  active    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plan        StudyPlan?
+  progress    LearnerProgress?
+  sessions    StudySession[]
+  words       LearnerWord[]
+  reviewItems ReviewItem[]
+  reading     ReadingProgress[]
+  rewards     LearnerRewards?
+  reports     WeeklyReport[]
+
+  @@index([userId])
+}
+
+/// 学习计划（家长端 /parent/plan）
+model StudyPlan {
+  id            String   @id @default(cuid())
+  learnerId     String   @unique
+  level         String
+  dailyMinutes  Int      @default(15)
+  dailyStars    Int      @default(5)
+  daysPerWeek   Int      @default(5)
+  remindAt      String   @default("")
+  /// 休息日数组，JSON 编码，如 "[0,6]"
+  restDaysJson  String   @default("[0,6]")
+  updatedAt     DateTime @updatedAt
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+}
+
+/// 地图进度汇总（契约 §4.5）
+model LearnerProgress {
+  id             String   @id @default(cuid())
+  learnerId      String   @unique
+  starsToday     Int      @default(0)
+  starsGoal      Int      @default(5)
+  starTotal      Int      @default(0)
+  currentUnitId  String?
+  chestRemaining Int      @default(2)
+  /// 已完成单元 id 列表，JSON 编码
+  doneUnitsJson  String   @default("[]")
+  updatedAt      DateTime @updatedAt
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+}
+
+/// 一次作答批次（契约 §4.6）。整关提交一次。
+model StudySession {
+  id         String   @id @default(cuid())
+  learnerId  String
+  unitId     String
+  startedAt  DateTime
+  finishedAt DateTime
+  stars      Int
+  /// 本批答案明细，JSON 编码（含 questionId/correct/attempts/elapsedMs）
+  answersJson String
+  createdAt  DateTime @default(now())
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  // 幂等：同一单元 10 秒内重复提交由应用层判 409
+  @@index([learnerId, unitId, createdAt])
+}
+
+/// 词卡收集状态（契约 §4.7）：只有真正收集到的词才有记录
+model LearnerWord {
+  id        String   @id @default(cuid())
+  learnerId String
+  word      String
+  unitZh    String
+  collectedAt DateTime @default(now())
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerId, word])
+}
+
+/// 复习项（契约 §4.10）。dueDays 由间隔重复算法算出。
+model ReviewItem {
+  id        String   @id @default(cuid())
+  learnerId String
+  word      String
+  unitZh    String
+  /// 到期需复习的天数，越大越紧急
+  dueDays   Int      @default(0)
+  /// 错了几次，用于排序与薄弱项统计
+  wrongCount Int     @default(0)
+  updatedAt DateTime @updatedAt
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerId, word])
+  @@index([learnerId, dueDays])
+}
+
+/// 读物进度（契约 §4.9）
+model ReadingProgress {
+  id        String   @id @default(cuid())
+  learnerId String
+  readingId String
+  readPages Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerId, readingId])
+}
+
+/// 奖励（契约 §4.11）
+model LearnerRewards {
+  id             String   @id @default(cuid())
+  learnerId      String   @unique
+  chestRemaining Int      @default(2)
+  /// 已获得徽章 id 列表，JSON 编码
+  badgesJson     String   @default("[]")
+  updatedAt      DateTime @updatedAt
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+}
+
+/// 周报快照（契约 §4.12）。按周聚合，避免每次现算。
+model WeeklyReport {
+  id          String   @id @default(cuid())
+  learnerId   String
+  /// ISO 周，如 2026-W43
+  week        String
+  minutes     Int      @default(0)
+  unitsDone   Int      @default(0)
+  unitsTotal  Int      @default(0)
+  streakDays  Int      @default(0)
+  /// 每日分钟数 [{"day":"一","minutes":12}]，JSON
+  dailyMinutesJson String @default("[]")
+  /// 薄弱项 [{"sound":"th","noteZh":"..."}]，JSON
+  weakSoundsJson   String @default("[]")
+  updatedAt   DateTime @updatedAt
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerId, week])
+}
+
+/// 家长端偏好（/parent/settings）
+model UserPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  weeklyReportEmail Boolean  @default(true)
+  dailyReminder     Boolean  @default(false)
+  quietStart        String   @default("21:00")
+  quietEnd          String   @default("07:00")
+  soundEffects      Boolean  @default(true)
+  locale            String   @default("zh")
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// 账号与订阅（/parent/account）。支付未接，先存方案信息与订单记录。
+model Account {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  planId    String   @default("free") // free | family | family-plus
+  planName  String   @default("体验版")
+  cycle     String?  // monthly | yearly | null
+  renewsAt  DateTime?
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  invoices Invoice[]
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  accountId String
+  date      DateTime @default(now())
+  amount    Int
+  status    String   @default("paid") // paid | refunded | pending
+  planName  String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}

@@ -7,7 +7,16 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  /**
+   * 生成目录刻意放在 src/ 之外。
+   *
+   * 踩过的坑：原先输出到 src/generated/prisma 时，`prisma generate` 写入的
+   * 二十多个 .ts 文件会被 Next 的文件监听器捕获，触发连续重编译
+   * （日志里刷满 "Compiled in 1ms"），并让浏览器自动化测试随机报
+   * ERR_ABORTED —— 看起来像页面有 bug，其实只是生成物在抖动。
+   * 生成物不是源码，不该进 src。
+   */
+  output   = "../prisma/generated"
 }
 
 datasource db {

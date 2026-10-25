@@ -1,50 +1,65 @@
 import path from 'node:path';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '@/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../../prisma/generated/client';
 
 /**
- * Prisma 客户端单例。
+ * Prisma 客户端单例 —— 同时支持 SQLite（本地）与 PostgreSQL（线上）。
  *
- * 为什么必须单例：Next.js 开发模式下热更新会反复执行模块，
- * 每次都 new PrismaClient() 会耗尽数据库连接。
+ * 为什么要双支持：
+ * - 本地开发用 SQLite，零依赖即可跑通
+ * - Vercel 是无状态平台，文件型数据库无法持久化，线上必须用 PostgreSQL
+ * 两者共用同一份 schema 与业务代码，只有 adapter 不同。
  *
- * Prisma 7 的重要变化（踩过）：
- * - schema.prisma 里**不能**再写 `url`，连接串只放在 prisma.config.ts（迁移）与运行时 adapter
- * - 运行时**必须**传 driver adapter，`datasourceUrl` 已不存在
- * 所以这里用 better-sqlite3 adapter 打开本地文件库。
+ * 怎么选：看 DATABASE_URL 的协议头
+ *   file:./dev.db             → SQLite
+ *   postgres://... | postgresql://... → PostgreSQL
  *
- * 上线切 PostgreSQL 时：把 adapter 换成 @prisma/adapter-pg 即可，
- * 业务代码（所有 route）不需要改动。
+ * Prisma 7 的两个坑（都踩过）：
+ * 1. schema.prisma 里不能写 url，连接串只在这里给
+ * 2. 运行时**必须**传 driver adapter，不存在 datasourceUrl 选项
  */
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function resolveDbPath(): string {
-  const url = process.env.DATABASE_URL ?? 'file:./dev.db';
+function isPostgres(url: string): boolean {
+  return /^postgres(ql)?:\/\//i.test(url);
+}
+
+/** SQLite 的相对路径以项目根为基准（与 prisma.config.ts 的解析一致） */
+function resolveSqlitePath(url: string): string {
   const rel = url.replace(/^file:/, '');
   if (path.isAbsolute(rel)) return rel;
-  /**
-   * 相对路径以**项目根目录**为基准。
-   *
-   * 实测踩到的坑：Prisma CLI 迁移时（prisma.config.ts 在项目根）把 `file:./dev.db`
-   * 解析成 `web/dev.db`，而这里一度拼成 `web/prisma/dev.db`，
-   * 结果运行时打开了一个 0 字节的空库 → 查询报「no such table」。
-   * 所以基准必须是 cwd，不能是 prisma/ 目录。
-   */
   return path.join(process.cwd(), rel.replace(/^\.\//, ''));
 }
 
 function createClient(): PrismaClient {
+  const url = process.env.DATABASE_URL ?? 'file:./dev.db';
+
+  if (isPostgres(url)) {
+    /**
+     * Neon 等托管 PG 通常要求 SSL。连接串里带 sslmode=require 即可，
+     * 这里显式传 ssl 以兼容不带参数的情况。
+     * rejectUnauthorized: false 是为了兼容 Neon 的证书链（其根证书不在常见信任库里）。
+     */
+    const needsSsl = /sslmode=(require|verify-ca|verify-full)/i.test(url) || /neon\.tech/i.test(url);
+    const adapter = new PrismaPg({
+      connectionString: url,
+      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+    });
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    });
+  }
+
   /**
-   * 注意 url 的写法：**不要**再加 `file:` 前缀。
-   *
-   * 实测踩到的坑：传 `file:F:/.../dev.db` 时，better-sqlite3 adapter 会
-   * 再按相对路径解析一遍，最终打开了一个不存在的空库，
-   * 报错 "The table `main.User` does not exist in the current database"，
-   * 而实际文件里 15 张表都在。直接给绝对路径即可。
+   * SQLite：url 不加 file: 前缀。
+   * 踩过的坑：传 `file:F:/.../dev.db` 时 better-sqlite3 会再按相对路径解析，
+   * 最终打开一个空库并报 "table main.User does not exist"。
    */
-  const adapter = new PrismaBetterSqlite3({ url: resolveDbPath() });
+  const adapter = new PrismaBetterSqlite3({ url: resolveSqlitePath(url) });
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
