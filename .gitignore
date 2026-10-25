@@ -37,6 +37,7 @@ Thumbs.db
 web/.devserver.log
 web/.devserver.err.log
 web/verify-*.cjs
+web/diag-*.cjs
 web/verify-*.mts
 
 push-retry.ps1
