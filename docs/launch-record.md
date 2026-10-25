@@ -46,18 +46,54 @@ npx vercel git connect
 
 | Key | 值 | 类型 |
 | --- | --- | --- |
-| `DATABASE_URL` | Neon 连接串（含 `?sslmode=require`） | Secret |
+| `DATABASE_URL` | Neon 连接串（含 `?sslmode=require`） | **Config（不能是 Secret）** |
 | `NEXT_PUBLIC_API_MODE` | `live` | Config |
 | `NEXT_PUBLIC_API_BASE` | `/api` | Config |
 | `NEXT_PUBLIC_SITE_URL` | `https://aotuenglish.vercel.app` | Config |
 
 > `NEXT_PUBLIC_*` 是**构建时内联**的，改完必须 Redeploy。
 
+### ⚠️ DATABASE_URL 必须是 Config 类型，不能是 Secret
+
+**这是上线后踩到的坑，会导致网站全站 503。**
+
+Vercel CLI 的 `env add` **默认把值存成 Secret**。而 Secret 类型的变量
+在 `vercel env pull` 时显示为 `[SENSITIVE]`，运行/构建环境也读不到真实值。
+
+结果：应用拿不到 `DATABASE_URL`，`lib/db.ts` 回退到默认的 `file:./dev.db`（SQLite），
+日志报：
+
+```
+prisma:error Cannot open database because the directory does not exist
+```
+
+所有接口 503，但**页面本身正常**（因为页面是静态的），很容易误判为"只是某个接口坏了"。
+
+**正确做法**：
+
+```bash
+# 删除旧的 Secret 类型
+npx vercel env rm DATABASE_URL production --yes
+
+# 用 --type config 重新添加
+echo "postgresql://..." | npx vercel env add DATABASE_URL production --type config
+```
+
+改完必须 **Redeploy** 才生效。
+
+**判断是否正常**：`curl https://你的域名/api/health` 应返回
+`{"ok":true,"db":"postgresql"}`。若 `db` 是 `sqlite`，就是这个坑。
+
 ---
 
-## 上线过程中发现并修复的 4 个真实 bug
+## 上线过程中发现并修复的 5 个真实 bug
 
 这些在本地 mock/SQLite 下都不会暴露，只有真上 Neon + Vercel 才出现：
+
+### 0. DATABASE_URL 存成 Secret 导致全站 503
+
+见上一节。上线当天实际发生过一次，表现为 `/api/health` 从 404/503 反复，
+日志是 `Cannot open database because the directory does not exist`。
 
 ### 1. 学习者页整页崩溃
 
